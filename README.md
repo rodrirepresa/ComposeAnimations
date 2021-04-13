@@ -6,5 +6,5 @@ In this repo you will find a series of animations made with Jetpack Compose
 
 ♟Chest -> Canvas + Coroutines + Animatable API
 
-https://user-images.githubusercontent.com/17813148/114558476-fcff7a80-9c6a-11eb-8f6c-ea947ca2038f.mp4
+![bloggif_607599e1c2854](https://user-images.githubusercontent.com/17813148/114558837-6089a800-9c6b-11eb-9ab4-e3fd298f6bf4.gif)
 
