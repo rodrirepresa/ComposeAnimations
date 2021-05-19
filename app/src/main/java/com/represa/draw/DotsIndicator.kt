@@ -57,7 +57,7 @@ fun Indicators(
             .fillMaxWidth()
             .padding(0.dp, 20.dp, 0.dp, 0.dp)
     ) {
-        state.setFirstDotPosition(center)
+        state.setFirstIndicatorPosition(center)
         for (i in 0 until state.dotSettings.size) {
             drawCircle(
                 color = dotSettings.color,
@@ -71,57 +71,40 @@ fun Indicators(
         }
     }
 
-    filledDot(state)
+    filledIndicator(state)
 }
 
 @Composable
-fun filledDot(state: IndicatorState) {
-    var dotSettings = state.dotSettings
+fun filledIndicator(state: IndicatorState) {
     Canvas(
         Modifier.fillMaxWidth()
     ) {
-        var currentItem =
-            (state.firstDotPosition!!.x + dotSettings.distanceBetweenDots * state.currentItem)
-        var nextItem =
-            (state.firstDotPosition!!.x + dotSettings.distanceBetweenDots * state.nextItem)
-        var distance = nextItem - currentItem
-        //This is gonna be the first dot
+        var distance = state.getSecondCircle().x - state.getFirstCircle().x
+        //This is gonna be the first filled dot
+        var firstDotAnimated = Offset(state.getFirstCircle().x + (distance * state.animation.value), state.firstDotPosition!!.y)
         drawCircle(
             color = Color.Black,
             radius = 15f,
-            center = Offset(
-                currentItem + (distance * state.animation.value),
-                state.firstDotPosition!!.y
-            ),
+            center = firstDotAnimated,
             alpha = 1f
         )
-        //This is gonna be the second one
+        //This is gonna be the second filled one
+        var secondDotAnimated = Offset(state.getFirstCircle().x + (distance * state.animationSecond.value), state.firstDotPosition!!.y)
         drawCircle(
             color = Color.Black,
             radius = 15f,
-            center = Offset(
-                currentItem + (distance * state.animationSecond.value),
-                state.firstDotPosition!!.y
-            ),
+            center = secondDotAnimated,
             alpha = 1f
         )
-        //This gonna be the rectangle between dots
+        //This gonna be the rectangle between filled dots
         var topleft = Offset(
-            currentItem + (distance * state.animationSecond.value),
+            secondDotAnimated.x,
             state.firstDotPosition!!.y - state.dotSettings.radius
-        )
-        var firstDot = Offset(
-            currentItem + (distance * state.animation.value),
-            state.firstDotPosition!!.y
-        )
-        var secondDot = Offset(
-            currentItem + (distance * state.animationSecond.value),
-            state.firstDotPosition!!.y
         )
         drawRect(
             color = Color.Black,
             topLeft = topleft,
-            size = Size( (secondDot.x - firstDot.x ).absoluteValue, state.dotSettings.radius * 2)
+            size = Size( (secondDotAnimated.x - firstDotAnimated.x ).absoluteValue, state.dotSettings.radius * 2)
         )
     }
 }
@@ -136,7 +119,7 @@ class IndicatorState(private val scope: CoroutineScope, val dotSettings: DotSett
     private var isScrolling by mutableStateOf(false)
 
     fun scroll() {
-        if (nextItem <= 4) {
+        if (nextItem < dotSettings.size) {
             isScrolling = true
             scope.launch {
                 nextItem = currentItem + 1
@@ -186,14 +169,17 @@ class IndicatorState(private val scope: CoroutineScope, val dotSettings: DotSett
         }
     }
 
-    fun setFirstDotPosition(center: Offset) {
+    fun setFirstIndicatorPosition(center: Offset) {
         firstDotPosition = Offset(
             center.x - (((dotSettings.size - 1) * dotSettings.distanceBetweenDots) / 2),
             center.y
         )
     }
 
-    fun scrollEnabled() = nextItem < 5 && !isScrolling
+    fun getFirstCircle() = Offset(firstDotPosition!!.x + dotSettings.distanceBetweenDots * currentItem , firstDotPosition!!.y )
+    fun getSecondCircle() = Offset(firstDotPosition!!.x + dotSettings.distanceBetweenDots * nextItem, firstDotPosition!!.y )
+
+    fun scrollEnabled() = nextItem < dotSettings.size && !isScrolling
     fun reverseScrollEnabled() = currentItem > 0 && !isScrolling
 
     class DotSettings(
