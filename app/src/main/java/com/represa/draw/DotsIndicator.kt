@@ -101,6 +101,8 @@ fun DotsIndicator() {
             }
         }
 
+        pagerState.targetPage
+
         Indicators(
             state,
             Modifier
@@ -296,7 +298,7 @@ class IndicatorState @ExperimentalPagerApi constructor(
     class DotSettings(
         var size: Int,
         var radius: Float,
-        var distanceBetweenDots: Float = radius * 7,
+        var distanceBetweenDots: Float = radius * 5,
         var color: Color = Color.White
     )
 
