@@ -7,7 +7,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.Card
@@ -22,10 +21,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.font.FontWeight.Companion.Bold
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.google.accompanist.coil.rememberCoilPainter
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -101,14 +97,14 @@ fun DotsIndicator() {
             }
         }
 
-        pagerState.targetPage
-
         Indicators(
             state,
             Modifier
                 .fillMaxWidth()
                 .padding(0.dp, 10.dp, 0.dp, 0.dp)
         )
+
+        test(state = state)
 
         Row(
             verticalAlignment = Alignment.Bottom,
@@ -127,9 +123,11 @@ fun DotsIndicator() {
                 Text(text = "scroll reverse")
             }
         }
+
     }
 }
 
+@ExperimentalPagerApi
 @Composable
 fun Indicators(
     state: IndicatorState,
@@ -153,9 +151,158 @@ fun Indicators(
         }
     }
 
-    filledIndicator(state)
+    //filledIndicator(state)
+    
 }
 
+
+@ExperimentalPagerApi
+@Composable
+fun test(state: IndicatorState){
+    if(state.pagerState.isScrollInProgress){
+        state.isScrollingTest = true
+        //move to right -> move firsr circle firsr
+        if(state.pagerState.targetPage!! > state.pagerState.currentPage) {
+            filledIndicatorFirstTest(
+                currentValue = state.pagerState.currentPage,
+                targetValue = state.pagerState.targetPage!!,
+                state = state
+            )
+            filledIndicatorSecondTest(currentValue = state.pagerState.currentPage, targetValue = state.pagerState.currentPage, state = state )
+            state.lastRight = true
+        }else{
+            filledIndicatorSecondTest(currentValue = state.pagerState.currentPage, targetValue = state.pagerState.targetPage!!, state = state)
+            filledIndicatorFirstTest(currentValue = state.pagerState.currentPage, targetValue = state.pagerState.currentPage, state = state )
+            state.lastRight = false
+        }
+
+    }else{
+        if (state.isScrollingTest) {
+            state.isScrollingTest = false
+            //Move to left -> move first secondCircle
+            if (state.lastRight) {
+                filledIndicatorSecondTest(
+                    currentValue = state.firstIndicator.lastPosition,
+                    targetValue = state.firstIndicator.currentPosition,
+                    state = state
+                )
+            } else {
+                filledIndicatorFirstTest(
+                    currentValue = state.secondIndicator.lastPosition,
+                    targetValue = state.secondIndicator.currentPosition,
+                    state = state
+                )
+            }
+        }
+    }
+}
+
+@ExperimentalPagerApi
+@Composable
+fun filledIndicatorFirstTest(currentValue: Int, targetValue: Int, state: IndicatorState) {
+    var animationFirst = remember {
+        Animatable(initialValue = 0f)
+    }
+    LaunchedEffect(animationFirst){
+        this.launch {  animationFirst.animateTo(1f) }
+    }
+    state.firstIndicator.currentPosition = targetValue
+    state.firstIndicator.lastPosition = currentValue
+
+    Canvas(
+        Modifier.fillMaxWidth()
+    ) {
+        var circleStart = state.getCircle(currentValue)
+        var circleEnd = state.getCircle(targetValue)
+        var distance = circleEnd.x - circleStart.x
+        //This is gonna be the first filled dot
+        var firstDotAnimated = Offset(
+            circleStart.x + (distance * animationFirst.value),
+            state.firstDotPosition!!.y
+        )
+        drawCircle(
+            color = Color.Black,
+            radius = state.dotSettings.radius,
+            center = firstDotAnimated,
+            alpha = 0.8f
+        )
+        //This is gonna be the second filled one
+        /*var secondDotAnimated = Offset(
+            state.getFirstCircle().x + (distance * animationSecond.value),
+            state.firstDotPosition!!.y
+        )
+        drawCircle(
+            color = Color.Black,
+            radius = state.dotSettings.radius,
+            center = secondDotAnimated,
+            alpha = 0.8f
+        )*/
+        //This gonna be the rectangle between filled dots
+
+        var x = state.getCircle(state.secondIndicator.currentPosition)
+        var topleft = Offset(
+            x.x,
+            state.firstDotPosition!!.y - state.dotSettings.radius
+        )
+        drawRect(
+            color = Color.Black,
+            alpha = 0.8f,
+            topLeft = topleft,
+            size = Size(
+                (firstDotAnimated.x - x.x).absoluteValue,
+                state.dotSettings.radius * 2
+            )
+        )
+    }
+}
+
+@ExperimentalPagerApi
+@Composable
+fun filledIndicatorSecondTest(currentValue: Int, targetValue: Int, state: IndicatorState) {
+    var animationSecond = remember {
+        Animatable(initialValue = 0f)
+    }
+    LaunchedEffect(animationSecond){
+        this.launch { animationSecond.animateTo(1f) }
+    }
+    state.secondIndicator.currentPosition = targetValue
+    state.secondIndicator.lastPosition = currentValue
+    Canvas(
+        Modifier.fillMaxWidth()
+    ) {
+        var circleStart = state.getCircle(currentValue)
+        var circleEnd = state.getCircle(targetValue)
+        var distance = circleEnd.x - circleStart.x
+        //This is gonna be the second filled one
+        var secondDotAnimated = Offset(
+            circleStart.x + (distance * animationSecond.value),
+            state.firstDotPosition!!.y
+        )
+        drawCircle(
+            color = Color.Black,
+            radius = state.dotSettings.radius,
+            center = secondDotAnimated,
+            alpha = 0.8f
+        )
+        //This gonna be the rectangle between filled dots
+        var topleft = Offset(
+            secondDotAnimated.x,
+            state.firstDotPosition!!.y - state.dotSettings.radius
+        )
+        var x = state.getCircle(state.firstIndicator.currentPosition)
+        drawRect(
+            color = Color.Black,
+            alpha = 0.8f,
+            topLeft = topleft,
+            size = Size(
+                (secondDotAnimated.x - x.x).absoluteValue,
+                state.dotSettings.radius * 2
+            )
+        )
+    }
+}
+
+@ExperimentalPagerApi
 @Composable
 fun filledIndicator(state: IndicatorState) {
     Canvas(
@@ -205,7 +352,7 @@ fun filledIndicator(state: IndicatorState) {
 class IndicatorState @ExperimentalPagerApi constructor(
     private val scope: CoroutineScope,
     val dotSettings: DotSettings,
-    private val pagerState: PagerState
+    val pagerState: PagerState
 ) {
     var currentItem by mutableStateOf(0)
     var nextItem by mutableStateOf(1)
@@ -213,6 +360,12 @@ class IndicatorState @ExperimentalPagerApi constructor(
     var animation = Animatable(initialValue = 0f)
     var animationSecond = Animatable(initialValue = 0f)
     private var isScrolling by mutableStateOf(false)
+
+    var isScrollingTest = false
+
+    var firstIndicator = CircleIndicator(0,0)
+    var secondIndicator = CircleIndicator(0,0)
+    var lastRight = true
 
     @ExperimentalPagerApi
     fun scroll() {
@@ -274,6 +427,7 @@ class IndicatorState @ExperimentalPagerApi constructor(
             }
         }
     }
+    fun test(){}
 
     fun setFirstIndicatorPosition(center: Offset) {
         firstDotPosition = Offset(
@@ -292,6 +446,11 @@ class IndicatorState @ExperimentalPagerApi constructor(
         firstDotPosition!!.y
     )
 
+    fun getCircle(targetValue: Int) = Offset(
+        firstDotPosition!!.x + dotSettings.distanceBetweenDots * targetValue,
+        firstDotPosition!!.y
+    )
+
     fun scrollEnabled() = nextItem < dotSettings.size && !isScrolling
     fun reverseScrollEnabled() = currentItem > 0 && !isScrolling
 
@@ -300,6 +459,11 @@ class IndicatorState @ExperimentalPagerApi constructor(
         var radius: Float,
         var distanceBetweenDots: Float = radius * 5,
         var color: Color = Color.White
+    )
+
+    class CircleIndicator(
+        var lastPosition: Int,
+        var currentPosition: Int
     )
 
 }
