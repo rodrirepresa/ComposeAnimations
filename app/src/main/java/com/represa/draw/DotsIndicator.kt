@@ -4,9 +4,11 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.Text
@@ -19,10 +21,18 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontWeight.Companion.Bold
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.sp
+import com.google.accompanist.coil.rememberCoilPainter
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
+import com.represa.draw.data.desserts
 import kotlin.math.absoluteValue
 
 
@@ -30,8 +40,10 @@ import kotlin.math.absoluteValue
 @Composable
 fun DotsIndicator() {
     var scope = rememberCoroutineScope()
-    var dotSettings = IndicatorState.DotSettings(size = 5, radius = 12f, color = Color.Black)
-    val pagerState = rememberPagerState(pageCount = 5)
+    val list = remember { desserts }
+    var dotSettings =
+        IndicatorState.DotSettings(size = list.size, radius = 12f, color = Color.Black)
+    val pagerState = rememberPagerState(pageCount = list.size)
     var state = remember { IndicatorState(scope, dotSettings, pagerState) }
 
     Column(
@@ -52,15 +64,54 @@ fun DotsIndicator() {
                 Modifier
                     .padding(0.dp, 10.dp)
                     .width(300.dp)
-                    .height(200.dp)
+                    .height(320.dp),
+                elevation = 3.dp,
+                shape = RoundedCornerShape(7.dp)
             ) {
+                Column {
+                    Image(
+                        painter = rememberCoilPainter(
+                            list[page].url,
+                            fadeIn = true
+                        ),
+                        contentDescription = "f",
+                        contentScale = ContentScale.FillBounds,
+                        modifier = Modifier.height(200.dp)
+                    )
+                    Column(Modifier.padding(10.dp)) {
+                        Text(
+                            text = list[page].name,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = list[page].description,
+                            fontSize = 15.sp,
+                            modifier = Modifier.padding(0.dp, 10.dp),
+                            color = Color.Gray
+                        )
+                        Row(
+                            verticalAlignment = Alignment.Bottom,
+                            modifier = Modifier.fillMaxHeight()
+                        ) {
+                            Text(text = list[page].price)
+                        }
+                    }
+                }
             }
         }
 
-        Indicators(state, Modifier.fillMaxWidth().padding(0.dp,10.dp,0.dp,0.dp))
+        Indicators(
+            state,
+            Modifier
+                .fillMaxWidth()
+                .padding(0.dp, 10.dp, 0.dp, 0.dp)
+        )
 
-        Row(verticalAlignment = Alignment.Bottom,
-        modifier = Modifier.fillMaxHeight()) {
+        Row(
+            verticalAlignment = Alignment.Bottom,
+            modifier = Modifier.fillMaxHeight()
+        ) {
             Button(
                 onClick = { state.scroll() },
                 enabled = state.scrollEnabled()
@@ -77,18 +128,6 @@ fun DotsIndicator() {
     }
 }
 
-fun LazyListState.getCurrentItem(): Int {
-    var currentOffset = layoutInfo.viewportEndOffset
-    var position = -1
-    layoutInfo.visibleItemsInfo.forEach {
-        if (it.offset.absoluteValue < currentOffset) {
-            currentOffset = it.offset.absoluteValue
-            position = it.index
-        }
-    }
-    return position
-}
-
 @Composable
 fun Indicators(
     state: IndicatorState,
@@ -96,7 +135,7 @@ fun Indicators(
 ) {
     var dotSettings = state.dotSettings
     Canvas(
-       modifier= modifier
+        modifier = modifier
     ) {
         state.setFirstIndicatorPosition(center)
         for (i in 0 until state.dotSettings.size) {
@@ -107,7 +146,7 @@ fun Indicators(
                     state.firstDotPosition!!.x + dotSettings.distanceBetweenDots * i,
                     state.firstDotPosition!!.y
                 ),
-                alpha = 0.3f
+                alpha = 0.2f
             )
         }
     }
@@ -130,7 +169,7 @@ fun filledIndicator(state: IndicatorState) {
             color = Color.Black,
             radius = state.dotSettings.radius,
             center = firstDotAnimated,
-            alpha = 1f
+            alpha = 0.8f
         )
         //This is gonna be the second filled one
         var secondDotAnimated = Offset(
@@ -141,7 +180,7 @@ fun filledIndicator(state: IndicatorState) {
             color = Color.Black,
             radius = state.dotSettings.radius,
             center = secondDotAnimated,
-            alpha = 1f
+            alpha = 0.8f
         )
         //This gonna be the rectangle between filled dots
         var topleft = Offset(
@@ -150,6 +189,7 @@ fun filledIndicator(state: IndicatorState) {
         )
         drawRect(
             color = Color.Black,
+            alpha = 0.8f,
             topLeft = topleft,
             size = Size(
                 (secondDotAnimated.x - firstDotAnimated.x).absoluteValue,
