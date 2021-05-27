@@ -1,5 +1,7 @@
 package com.represa.draw
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -7,7 +9,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.Card
@@ -20,12 +21,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.font.FontWeight.Companion.Bold
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.google.accompanist.coil.rememberCoilPainter
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -33,7 +31,6 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
 import com.represa.draw.data.desserts
-import kotlin.math.absoluteValue
 
 
 @ExperimentalPagerApi
@@ -44,7 +41,7 @@ fun DotsIndicator() {
     var dotSettings =
         IndicatorState.DotSettings(size = list.size, radius = 12f, color = Color.Black)
     val pagerState = rememberPagerState(pageCount = list.size)
-    var state = remember { IndicatorState(scope, dotSettings, pagerState) }
+    var state = remember { IndicatorState(scope, dotSettings) }
 
     Column(
         Modifier
@@ -101,7 +98,6 @@ fun DotsIndicator() {
             }
         }
 
-        pagerState.targetPage
 
         Indicators(
             state,
@@ -110,18 +106,20 @@ fun DotsIndicator() {
                 .padding(0.dp, 10.dp, 0.dp, 0.dp)
         )
 
+        test(state = state, pagerState = pagerState)
+
         Row(
             verticalAlignment = Alignment.Bottom,
             modifier = Modifier.fillMaxHeight()
         ) {
             Button(
-                onClick = { state.scroll() },
+                onClick = { state.scroll(state.firsIndicatorPosition+1) },
                 enabled = state.scrollEnabled()
             ) {
                 Text(text = "scroll")
             }
             Button(
-                onClick = { state.scrollReverse() },
+                onClick = { state.scrollReverse(state.secondIndicatorPosition -1) },
                 enabled = state.reverseScrollEnabled()
             ) {
                 Text(text = "scroll reverse")
@@ -130,6 +128,19 @@ fun DotsIndicator() {
     }
 }
 
+@ExperimentalPagerApi
+@Composable
+fun test(state: IndicatorState, pagerState: PagerState) {
+    //var currentValue = state.currentValue
+    //state.scrollReverse(currentValue)
+    if(pagerState.isScrollInProgress && state.targetPosition != pagerState.targetPage){
+        state.startScrolling(pagerState.targetPage!!)
+    }else if(!pagerState.isScrollInProgress){
+        state.finishScrolling()
+    }
+}
+
+@ExperimentalPagerApi
 @Composable
 fun Indicators(
     state: IndicatorState,
@@ -153,7 +164,59 @@ fun Indicators(
         }
     }
 
-    filledIndicator(state)
+    //filledIndicator(state)
+
+    firstFilledDot(state, state.targetPosition)
+    //secondFilledCircle(state, state.lastPosition)
+}
+
+@ExperimentalPagerApi
+@Composable
+fun firstFilledDot(state: IndicatorState, target: Int ) {
+
+    Canvas(
+        Modifier.fillMaxWidth()
+    ) {
+        var targetPosition = state.getTargetValue(target)
+        var currentPosition = state.getTargetValue(state.currentPosition)
+        var distanceFirstCircle = (targetPosition.x - currentPosition.x)
+
+        //This is gonna be the first filled dot
+        var firstDotAnimated = Offset(
+            currentPosition.x + (distanceFirstCircle * state.animation.value),
+            state.firstDotPosition!!.y
+        )
+        drawCircle(
+            color = Color.Black,
+            radius = state.dotSettings.radius,
+            center = firstDotAnimated,
+            alpha = 0.8f
+        )
+    }
+}
+
+@Composable
+fun secondFilledCircle(state: IndicatorState, current: Int) {
+
+    Canvas(
+        Modifier.fillMaxWidth()
+    ) {
+        var targetPosition = state.getTargetValue(state.targetPosition)
+        var currentPosition = state.getTargetValue(current)
+        var distanceFirstCircle = (targetPosition.x - currentPosition.x)
+
+        //This is gonna be the first filled dot
+        var secondDotAnimated = Offset(
+            currentPosition.x + (distanceFirstCircle * state.animationSecond.value),
+            state.firstDotPosition!!.y
+        )
+        drawCircle(
+            color = Color.Green,
+            radius = state.dotSettings.radius,
+            center = secondDotAnimated,
+            alpha = 0.8f
+        )
+    }
 }
 
 @Composable
@@ -161,10 +224,16 @@ fun filledIndicator(state: IndicatorState) {
     Canvas(
         Modifier.fillMaxWidth()
     ) {
+        var targetValue = state.firsIndicatorPosition
+        var currentValue = state.secondIndicatorPosition
+        var targetPosition = state.getTargetValue(targetValue)
+        var currentPosition = state.getTargetValue(currentValue)
+        var distanceFirstCircle = (targetPosition.x - currentPosition.x)
+
         var distance = state.getSecondCircle().x - state.getFirstCircle().x
         //This is gonna be the first filled dot
         var firstDotAnimated = Offset(
-            state.getFirstCircle().x + (distance * state.animation.value),
+            currentPosition.x + (distanceFirstCircle * state.animation.value),
             state.firstDotPosition!!.y
         )
         drawCircle(
@@ -175,11 +244,11 @@ fun filledIndicator(state: IndicatorState) {
         )
         //This is gonna be the second filled one
         var secondDotAnimated = Offset(
-            state.getFirstCircle().x + (distance * state.animationSecond.value),
+            currentPosition.x + (distanceFirstCircle * state.animationSecond.value),
             state.firstDotPosition!!.y
         )
         drawCircle(
-            color = Color.Black,
+            color = Color.Green,
             radius = state.dotSettings.radius,
             center = secondDotAnimated,
             alpha = 0.8f
@@ -189,7 +258,7 @@ fun filledIndicator(state: IndicatorState) {
             secondDotAnimated.x,
             state.firstDotPosition!!.y - state.dotSettings.radius
         )
-        drawRect(
+        /*drawRect(
             color = Color.Black,
             alpha = 0.8f,
             topLeft = topleft,
@@ -197,16 +266,22 @@ fun filledIndicator(state: IndicatorState) {
                 (secondDotAnimated.x - firstDotAnimated.x).absoluteValue,
                 state.dotSettings.radius * 2
             )
-        )
+        )*/
     }
 }
 
 
+
+
 class IndicatorState @ExperimentalPagerApi constructor(
-    private val scope: CoroutineScope,
-    val dotSettings: DotSettings,
-    private val pagerState: PagerState
+    val scope: CoroutineScope,
+    val dotSettings: DotSettings
 ) {
+
+    enum class IndicatorState{
+        IDLE,SCROLLING_LEFT,SCROLLING_RIGHT,SCROLLING
+    }
+
     var currentItem by mutableStateOf(0)
     var nextItem by mutableStateOf(1)
     var firstDotPosition: Offset? = null
@@ -214,46 +289,149 @@ class IndicatorState @ExperimentalPagerApi constructor(
     var animationSecond = Animatable(initialValue = 0f)
     private var isScrolling by mutableStateOf(false)
 
+    var firsIndicatorPosition by mutableStateOf(0)
+    var targetFirstIndicatorPostion by mutableStateOf(0)
+    var secondIndicatorPosition by mutableStateOf(0)
+    var targetSecondIndicatorPostion by mutableStateOf(0)
+    var test = IndicatorState.IDLE
+
+
+
+    var lastPosition by mutableStateOf(0)
+    var currentPosition by mutableStateOf(0)
+    var targetPosition by mutableStateOf(0)
+
+    fun startScrolling(targetValue: Int){
+        if(targetValue < dotSettings.size && currentPosition < dotSettings.size){
+            if(targetValue == targetPosition +2){
+                scope.launch {
+                    targetPosition++
+                    animation.snapTo(0f)
+                    animation.animateTo(
+                        targetValue = 1f,
+                        animationSpec = tween(durationMillis = 100, easing = LinearEasing)
+                    )
+                    targetPosition++
+                    animation.snapTo(0f)
+                    animation.animateTo(
+                        targetValue = 1f,
+                        animationSpec = tween(durationMillis = 100, easing = LinearEasing)
+                    )
+                }
+            }else if( targetValue == targetPosition -2) {
+                scope.launch {
+                    targetPosition--
+                    animation.snapTo(0f)
+                    animation.animateTo(
+                        targetValue = 1f,
+                        animationSpec = tween(durationMillis = 100, easing = LinearEasing)
+                    )
+                    targetPosition--
+                    animation.snapTo(0f)
+                    animation.animateTo(
+                        targetValue = 1f,
+                        animationSpec = tween(durationMillis = 100, easing = LinearEasing)
+                    )
+                }
+            }else{
+                scope.launch {
+                    targetPosition = targetValue
+                    animation.snapTo(0f)
+                    animation.animateTo(
+                        targetValue = 1f,
+                        animationSpec = tween(durationMillis = 100, easing = LinearEasing)
+                    )
+                }
+            }
+        }
+    }
+
+    fun finishScrolling(){
+        if(targetPosition != currentPosition){
+            scope.launch {
+                lastPosition = currentPosition
+                animationSecond.snapTo(0f)
+                animationSecond.animateTo(
+                    targetValue = 1f,
+                    animationSpec = tween(durationMillis = 100, easing = LinearEasing)
+                )
+                currentPosition = targetPosition
+            }
+        }else{
+            scope.launch {
+                targetPosition = currentPosition
+                animation.snapTo(0f)
+                animation.animateTo(
+                    targetValue = 1f,
+                    animationSpec = tween(durationMillis = 100, easing = LinearEasing)
+                )
+            }
+        }
+    }
+
+
     @ExperimentalPagerApi
-    fun scroll() {
-        if (nextItem < dotSettings.size) {
+    fun scroll(target: Int) {
+        if (secondIndicatorPosition < dotSettings.size) {
             isScrolling = true
             scope.launch {
-                nextItem = currentItem + 1
+                //nextItem = currentItem + 1
+                //firsIndicatorPosition = target
                 launch {
                     //lazyListState.animateScrollToItem(nextItem)
-                    pagerState.animateScrollToPage(nextItem)
+                    //pagerState.animateScrollToPage(nextItem)
                 }
                 launch {
+                    animation.snapTo(0f)
                     animation.animateTo(
                         targetValue = 1f,
                         animationSpec = tween(durationMillis = 100, easing = LinearEasing)
                     )
                 }.join()
+                //animation.snapTo(0f)
+                //animationSecond.snapTo(0f)
+                //currentItem++
+                //nextItem++
+            }
+        }
+    }
+
+    @ExperimentalPagerApi
+    fun scrollSecond() {
+        if (secondIndicatorPosition < dotSettings.size) {
+            scope.launch {
+                //nextItem = currentItem + 1
+                launch {
+                    //lazyListState.animateScrollToItem(nextItem)
+                    //pagerState.animateScrollToPage(nextItem)
+                }
                 launch {
                     animationSecond.animateTo(
                         targetValue = 1f,
                         animationSpec = tween(durationMillis = 100, easing = LinearEasing)
                     )
                 }.join()
-                animation.snapTo(0f)
+                //animation.snapTo(0f)
                 animationSecond.snapTo(0f)
-                currentItem++
-                nextItem++
+                animation.snapTo(0f)
+                secondIndicatorPosition++
+                //currentItem++
+                //nextItem++
                 isScrolling = false
             }
         }
     }
 
     @ExperimentalPagerApi
-    fun scrollReverse() {
-        if (currentItem > 0) {
+    fun scrollReverse(target: Int) {
+        if (secondIndicatorPosition > 0) {
             isScrolling = true
             scope.launch {
-                nextItem = currentItem - 1
+                //nextItem = currentItem - 1
+                firsIndicatorPosition = target
                 launch {
                     //lazyListState.animateScrollToItem(nextItem)
-                    pagerState.animateScrollToPage(nextItem)
+                    //pagerState.animateScrollToPage(nextItem)
                 }
                 launch {
                     animationSecond.animateTo(
@@ -261,15 +439,32 @@ class IndicatorState @ExperimentalPagerApi constructor(
                         animationSpec = tween(durationMillis = 100, easing = LinearEasing)
                     )
                 }.join()
+                //animation.snapTo(0f)
+                //animationSecond.snapTo(0f)
+                //currentItem--
+            }
+        }
+    }
+
+    fun scrollReverseFirst() {
+        if (secondIndicatorPosition > 0) {
+            scope.launch {
+                //nextItem = currentItem - 1
+                launch {
+                    //lazyListState.animateScrollToItem(nextItem)
+                    //pagerState.animateScrollToPage(nextItem)
+                }
                 launch {
                     animation.animateTo(
                         targetValue = 1f,
                         animationSpec = tween(durationMillis = 100, easing = LinearEasing)
                     )
                 }.join()
-                animation.snapTo(0f)
                 animationSecond.snapTo(0f)
-                currentItem--
+                animation.snapTo(0f)
+                secondIndicatorPosition--
+                //currentItem++
+                //nextItem++
                 isScrolling = false
             }
         }
@@ -292,8 +487,13 @@ class IndicatorState @ExperimentalPagerApi constructor(
         firstDotPosition!!.y
     )
 
-    fun scrollEnabled() = nextItem < dotSettings.size && !isScrolling
-    fun reverseScrollEnabled() = currentItem > 0 && !isScrolling
+    fun getTargetValue(target: Int) = Offset(
+        firstDotPosition!!.x + dotSettings.distanceBetweenDots * target,
+        firstDotPosition!!.y
+    )
+
+    fun scrollEnabled() = secondIndicatorPosition+1 < dotSettings.size && !isScrolling
+    fun reverseScrollEnabled() = secondIndicatorPosition > 0 && !isScrolling
 
     class DotSettings(
         var size: Int,
