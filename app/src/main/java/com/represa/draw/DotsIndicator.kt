@@ -116,7 +116,14 @@ fun test(state: IndicatorState, pagerState: PagerState) {
     //var currentValue = state.currentValue
     //state.scrollReverse(currentValue)
     if (pagerState.isScrollInProgress && state.targetPosition != pagerState.targetPage) {
-        state.startScrolling(pagerState.targetPage!!)
+        if(pagerState.targetPage!! > state.currentPosition+1 && pagerState.targetPage!! > state.currentPosition){
+            state.startScrolling(state.currentPosition+1)
+        }else if(pagerState.targetPage!! < state.currentPosition-1 && pagerState.targetPage!! < state.currentPosition){
+            state.startScrolling(state.currentPosition-1)
+        }else{
+            state.startScrolling(pagerState.targetPage!!)
+        }
+
     } else if (!pagerState.isScrollInProgress) {
         state.finishScrolling()
     }
@@ -342,7 +349,7 @@ class IndicatorState @ExperimentalPagerApi constructor(
                 animation.snapTo(0f)
                 animation.animateTo(
                     targetValue = 1f,
-                    animationSpec = tween(durationMillis = 100, easing = LinearEasing)
+                    animationSpec = tween(durationMillis = 200, easing = LinearEasing)
                 )
             }
         }
@@ -356,7 +363,7 @@ class IndicatorState @ExperimentalPagerApi constructor(
                 stateSecondDot = DotState.SCROLLING
                 animationSecond.animateTo(
                     targetValue = 1f,
-                    animationSpec = tween(durationMillis = 100, easing = LinearEasing)
+                    animationSpec = tween(durationMillis = 200, easing = LinearEasing)
                 )
                 animationSecond.snapTo(0f)
                 currentPosition = targetPosition
