@@ -8,7 +8,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -105,27 +104,34 @@ fun DotsIndicator() {
                 .padding(0.dp, 10.dp, 0.dp, 0.dp)
         )
 
-        test(state = state, pagerState = pagerState)
+        targetValue(state = state, pagerState = pagerState)
 
     }
 }
 
 @ExperimentalPagerApi
 @Composable
-fun test(state: IndicatorState, pagerState: PagerState) {
+fun targetValue(state: IndicatorState, pagerState: PagerState) {
     //var currentValue = state.currentValue
     //state.scrollReverse(currentValue)
-    if (pagerState.isScrollInProgress && state.targetPosition != pagerState.targetPage) {
-        if(pagerState.targetPage!! > state.currentPosition+1 && pagerState.targetPage!! > state.currentPosition){
-            state.startScrolling(state.currentPosition+1)
-        }else if(pagerState.targetPage!! < state.currentPosition-1 && pagerState.targetPage!! < state.currentPosition){
-            state.startScrolling(state.currentPosition-1)
-        }else{
-            state.startScrolling(pagerState.targetPage!!)
+    if (pagerState.isScrollInProgress) {
+        Box(modifier = Modifier.size(100.dp)) {
+            Text(text = pagerState.currentPageOffset.toString())
         }
-
+    }
+    if (pagerState.isScrollInProgress && state.targetPosition != pagerState.targetValue()) {
+        state.startScrolling(pagerState.targetValue()!!)
     } else if (!pagerState.isScrollInProgress) {
         state.finishScrolling()
+    }
+}
+
+@ExperimentalPagerApi
+fun PagerState.targetValue(): Int {
+    return if (this.currentPageOffset in -0.15..0.15) {
+        currentPage
+    } else {
+        this.targetPage!!
     }
 }
 
@@ -349,7 +355,7 @@ class IndicatorState @ExperimentalPagerApi constructor(
                 animation.snapTo(0f)
                 animation.animateTo(
                     targetValue = 1f,
-                    animationSpec = tween(durationMillis = 200, easing = LinearEasing)
+                    animationSpec = tween(durationMillis = 100, easing = LinearEasing)
                 )
             }
         }
@@ -363,7 +369,7 @@ class IndicatorState @ExperimentalPagerApi constructor(
                 stateSecondDot = DotState.SCROLLING
                 animationSecond.animateTo(
                     targetValue = 1f,
-                    animationSpec = tween(durationMillis = 200, easing = LinearEasing)
+                    animationSpec = tween(durationMillis = 100, easing = LinearEasing)
                 )
                 animationSecond.snapTo(0f)
                 currentPosition = targetPosition
