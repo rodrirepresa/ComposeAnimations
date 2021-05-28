@@ -1,7 +1,5 @@
 package com.represa.draw
 
-import android.util.Log
-import android.widget.Toast
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -22,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.google.accompanist.coil.rememberCoilPainter
@@ -166,56 +163,95 @@ fun Indicators(
 
     //filledIndicator(state)
 
-    firstFilledDot(state, state.targetPosition)
-    //secondFilledCircle(state, state.lastPosition)
+    firstFilledDot(state)
+    secondFilledCircle(state)
 }
 
 @ExperimentalPagerApi
 @Composable
-fun firstFilledDot(state: IndicatorState, target: Int ) {
+fun firstFilledDot(state: IndicatorState) {
+    if(state.stateFirstDot == IndicatorState.DotState.SCROLLING) {
+        Canvas(
+            Modifier.fillMaxWidth()
+        ) {
+            var targetPosition = state.getTargetValue(state.targetPosition)
+            var currentPosition = state.getTargetValue(state.currentPosition)
+            var distanceFirstCircle = (targetPosition.x - currentPosition.x)
 
-    Canvas(
-        Modifier.fillMaxWidth()
-    ) {
-        var targetPosition = state.getTargetValue(target)
-        var currentPosition = state.getTargetValue(state.currentPosition)
-        var distanceFirstCircle = (targetPosition.x - currentPosition.x)
+            //This is gonna be the first filled dot
+            var firstDotAnimated = Offset(
+                currentPosition.x + (distanceFirstCircle * state.animation.value),
+                state.firstDotPosition!!.y
+            )
+            drawCircle(
+                color = Color.Black,
+                radius = state.dotSettings.radius,
+                center = firstDotAnimated,
+                alpha = 0.8f
+            )
+        }
+    }else{
+        Canvas(
+            Modifier.fillMaxWidth()
+        ) {
+            var currentPosition = state.getTargetValue(state.currentPosition)
 
-        //This is gonna be the first filled dot
-        var firstDotAnimated = Offset(
-            currentPosition.x + (distanceFirstCircle * state.animation.value),
-            state.firstDotPosition!!.y
-        )
-        drawCircle(
-            color = Color.Black,
-            radius = state.dotSettings.radius,
-            center = firstDotAnimated,
-            alpha = 0.8f
-        )
+            //This is gonna be the first filled dot
+            var firstDotAnimated = Offset(
+                currentPosition.x,
+                state.firstDotPosition!!.y
+            )
+            drawCircle(
+                color = Color.Black,
+                radius = state.dotSettings.radius,
+                center = firstDotAnimated,
+                alpha = 0.8f
+            )
+        }
     }
 }
 
 @Composable
-fun secondFilledCircle(state: IndicatorState, current: Int) {
+fun secondFilledCircle(state: IndicatorState) {
+    if(state.stateSecondDot == IndicatorState.DotState.SCROLLING) {
 
-    Canvas(
-        Modifier.fillMaxWidth()
-    ) {
-        var targetPosition = state.getTargetValue(state.targetPosition)
-        var currentPosition = state.getTargetValue(current)
-        var distanceFirstCircle = (targetPosition.x - currentPosition.x)
+        Canvas(
+            Modifier.fillMaxWidth()
+        ) {
+            var targetPosition = state.getTargetValue(state.targetPosition)
+            var currentPosition = state.getTargetValue(state.currentPosition)
+            var distanceFirstCircle = (targetPosition.x - currentPosition.x)
 
-        //This is gonna be the first filled dot
-        var secondDotAnimated = Offset(
-            currentPosition.x + (distanceFirstCircle * state.animationSecond.value),
-            state.firstDotPosition!!.y
-        )
-        drawCircle(
-            color = Color.Green,
-            radius = state.dotSettings.radius,
-            center = secondDotAnimated,
-            alpha = 0.8f
-        )
+            //This is gonna be the first filled dot
+            var secondDotAnimated = Offset(
+                currentPosition.x + (distanceFirstCircle * state.animationSecond.value),
+                state.firstDotPosition!!.y
+            )
+            drawCircle(
+                color = Color.Green,
+                radius = state.dotSettings.radius,
+                center = secondDotAnimated,
+                alpha = 0.8f
+            )
+        }
+    }else{
+        Canvas(
+            Modifier.fillMaxWidth()
+        ) {
+            var currentPosition = state.getTargetValue(state.currentPosition)
+
+            //This is gonna be the first filled dot
+            var secondDotAnimated = Offset(
+                currentPosition.x,
+                state.firstDotPosition!!.y
+            )
+            drawCircle(
+                color = Color.Green,
+                radius = state.dotSettings.radius,
+                center = secondDotAnimated,
+                alpha = 0.8f
+            )
+        }
     }
 }
 
@@ -278,7 +314,7 @@ class IndicatorState @ExperimentalPagerApi constructor(
     val dotSettings: DotSettings
 ) {
 
-    enum class IndicatorState{
+    enum class DotState{
         IDLE,SCROLLING_LEFT,SCROLLING_RIGHT,SCROLLING
     }
 
@@ -293,17 +329,17 @@ class IndicatorState @ExperimentalPagerApi constructor(
     var targetFirstIndicatorPostion by mutableStateOf(0)
     var secondIndicatorPosition by mutableStateOf(0)
     var targetSecondIndicatorPostion by mutableStateOf(0)
-    var test = IndicatorState.IDLE
+    var test = DotState.IDLE
 
 
-
-    var lastPosition by mutableStateOf(0)
-    var currentPosition by mutableStateOf(0)
-    var targetPosition by mutableStateOf(0)
+    var currentPosition = 0
+    var targetPosition = 0
+    var stateFirstDot by mutableStateOf(DotState.IDLE)
+    var stateSecondDot by mutableStateOf(DotState.IDLE)
 
     fun startScrolling(targetValue: Int){
         if(targetValue < dotSettings.size && currentPosition < dotSettings.size){
-            if(targetValue == targetPosition +2){
+            /*if(targetValue == targetPosition +2){
                 scope.launch {
                     targetPosition++
                     animation.snapTo(0f)
@@ -333,9 +369,10 @@ class IndicatorState @ExperimentalPagerApi constructor(
                         animationSpec = tween(durationMillis = 100, easing = LinearEasing)
                     )
                 }
-            }else{
+            }else{*/
                 scope.launch {
                     targetPosition = targetValue
+                    stateFirstDot = DotState.SCROLLING
                     animation.snapTo(0f)
                     animation.animateTo(
                         targetValue = 1f,
@@ -343,29 +380,31 @@ class IndicatorState @ExperimentalPagerApi constructor(
                     )
                 }
             }
-        }
+        //}
     }
 
     fun finishScrolling(){
+        stateSecondDot = DotState.IDLE
         if(targetPosition != currentPosition){
             scope.launch {
-                lastPosition = currentPosition
+                stateSecondDot = DotState.SCROLLING
                 animationSecond.snapTo(0f)
                 animationSecond.animateTo(
                     targetValue = 1f,
                     animationSpec = tween(durationMillis = 100, easing = LinearEasing)
                 )
                 currentPosition = targetPosition
+                stateSecondDot = DotState.IDLE
             }
         }else{
-            scope.launch {
+            /*scope.launch {
                 targetPosition = currentPosition
                 animation.snapTo(0f)
                 animation.animateTo(
                     targetValue = 1f,
                     animationSpec = tween(durationMillis = 100, easing = LinearEasing)
                 )
-            }
+            }*/
         }
     }
 
