@@ -1,4 +1,4 @@
-package com.represa.draw.util
+package com.represa.draw.extensions
 
 import androidx.compose.foundation.lazy.LazyListState
 import kotlin.math.absoluteValue
