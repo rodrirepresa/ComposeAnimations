@@ -313,6 +313,7 @@ class IndicatorState @ExperimentalPagerApi constructor(
 
     var currentPosition = 0
     var targetPosition = 0
+    var isScrollingBack = false
     var stateFirstDot by mutableStateOf(DotState.IDLE)
     var stateSecondDot by mutableStateOf(DotState.IDLE)
 
@@ -349,15 +350,29 @@ class IndicatorState @ExperimentalPagerApi constructor(
                     )
                 }
             }else{*/
-            scope.launch {
-                targetPosition = targetValue
-                stateFirstDot = DotState.SCROLLING
-                animation.snapTo(0f)
-                animation.animateTo(
-                    targetValue = 1f,
-                    animationSpec = tween(durationMillis = 100, easing = LinearEasing)
-                )
-            }
+                if(targetValue != currentPosition) {
+                    scope.launch {
+                        targetPosition = targetValue
+                        stateFirstDot = DotState.SCROLLING
+                        animation.snapTo(0f)
+                        animation.animateTo(
+                            targetValue = 1f,
+                            animationSpec = tween(durationMillis = 100, easing = LinearEasing)
+                        )
+                    }
+                }else if(!isScrollingBack){
+                    isScrollingBack = true
+                    scope.launch {
+                        stateFirstDot = DotState.SCROLLING
+                        animation.snapTo(1f)
+                        animation.animateTo(
+                            targetValue = 0f,
+                            animationSpec = tween(durationMillis = 100, easing = LinearEasing)
+                        )
+                        targetPosition = targetValue
+                        isScrollingBack = false
+                    }
+                }
         }
         //}
     }
