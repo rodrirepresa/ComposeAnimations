@@ -4,7 +4,14 @@ In this repo you will find a series of animations made with Jetpack Compose
 
 ## Current Animations
 
-♟Chest -> Canvas + Coroutines + Animatable API
+♟Chest
 
-![bloggif_607599e1c2854](https://user-images.githubusercontent.com/17813148/114558837-6089a800-9c6b-11eb-9ab4-e3fd298f6bf4.gif)
+![ezgif com-optimize](https://user-images.githubusercontent.com/17813148/120201260-88d26380-c225-11eb-9bb1-a9595533b698.gif)
+
+
+:page_facing_up: Indicators
+
+![ezgif com-video-to-gif-5](https://user-images.githubusercontent.com/17813148/120201649-f54d6280-c225-11eb-8522-dbe6726fa004.gif)
+
+
 
