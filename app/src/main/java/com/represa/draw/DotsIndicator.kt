@@ -112,8 +112,6 @@ fun DotsIndicator() {
 @ExperimentalPagerApi
 @Composable
 fun targetValue(state: IndicatorState, pagerState: PagerState) {
-    //var currentValue = state.currentValue
-    //state.scrollReverse(currentValue)
     if (pagerState.isScrollInProgress) {
         Box(modifier = Modifier.size(100.dp)) {
             Text(text = pagerState.currentPageOffset.toString())
@@ -292,14 +290,12 @@ fun drawUnion(state: IndicatorState) {
                 )
             )
         }
-    } else {
-
     }
 }
 
 
 class IndicatorState @ExperimentalPagerApi constructor(
-    val scope: CoroutineScope,
+    private val scope: CoroutineScope,
     val dotSettings: DotSettings
 ) {
 
@@ -319,62 +315,30 @@ class IndicatorState @ExperimentalPagerApi constructor(
 
     fun startScrolling(targetValue: Int) {
         if (targetValue < dotSettings.size && currentPosition < dotSettings.size) {
-            /*if(targetValue == targetPosition +2){
+            if (targetValue != currentPosition) {
                 scope.launch {
-                    targetPosition++
-                    animation.snapTo(0f)
-                    animation.animateTo(
-                        targetValue = 1f,
-                        animationSpec = tween(durationMillis = 100, easing = LinearEasing)
-                    )
-                    targetPosition++
+                    targetPosition = targetValue
+                    stateFirstDot = DotState.SCROLLING
                     animation.snapTo(0f)
                     animation.animateTo(
                         targetValue = 1f,
                         animationSpec = tween(durationMillis = 100, easing = LinearEasing)
                     )
                 }
-            }else if( targetValue == targetPosition -2) {
+            } else if (!isScrollingBack) {
+                isScrollingBack = true
                 scope.launch {
-                    targetPosition--
-                    animation.snapTo(0f)
+                    stateFirstDot = DotState.SCROLLING
+                    animation.snapTo(1f)
                     animation.animateTo(
-                        targetValue = 1f,
+                        targetValue = 0f,
                         animationSpec = tween(durationMillis = 100, easing = LinearEasing)
                     )
-                    targetPosition--
-                    animation.snapTo(0f)
-                    animation.animateTo(
-                        targetValue = 1f,
-                        animationSpec = tween(durationMillis = 100, easing = LinearEasing)
-                    )
+                    targetPosition = targetValue
+                    isScrollingBack = false
                 }
-            }else{*/
-                if(targetValue != currentPosition) {
-                    scope.launch {
-                        targetPosition = targetValue
-                        stateFirstDot = DotState.SCROLLING
-                        animation.snapTo(0f)
-                        animation.animateTo(
-                            targetValue = 1f,
-                            animationSpec = tween(durationMillis = 100, easing = LinearEasing)
-                        )
-                    }
-                }else if(!isScrollingBack){
-                    isScrollingBack = true
-                    scope.launch {
-                        stateFirstDot = DotState.SCROLLING
-                        animation.snapTo(1f)
-                        animation.animateTo(
-                            targetValue = 0f,
-                            animationSpec = tween(durationMillis = 100, easing = LinearEasing)
-                        )
-                        targetPosition = targetValue
-                        isScrollingBack = false
-                    }
-                }
+            }
         }
-        //}
     }
 
     fun finishScrolling() {
@@ -390,15 +354,6 @@ class IndicatorState @ExperimentalPagerApi constructor(
                 currentPosition = targetPosition
                 stateSecondDot = DotState.IDLE
             }
-        } else {
-            /*scope.launch {
-                targetPosition = currentPosition
-                animation.snapTo(0f)
-                animation.animateTo(
-                    targetValue = 1f,
-                    animationSpec = tween(durationMillis = 100, easing = LinearEasing)
-                )
-            }*/
         }
     }
 
