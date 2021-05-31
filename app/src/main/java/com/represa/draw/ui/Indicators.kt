@@ -25,13 +25,13 @@ fun firstFilledDot(state: IndicatorState) {
         Canvas(
             Modifier.fillMaxWidth()
         ) {
-            var targetPosition = state.getTargetValue(state.targetPosition)
-            var currentPosition = state.getTargetValue(state.currentPosition)
-            var distanceFirstCircle = (targetPosition.x - currentPosition.x)
+            var targetPosition = state.getOffset(state.targetPosition)
+            var currentPosition = state.getOffset(state.currentPosition)
+            var distanceDots = (targetPosition.x - currentPosition.x)
 
             //This is gonna be the first filled dot
             var firstDotAnimated = Offset(
-                currentPosition.x + (distanceFirstCircle * state.animation.value),
+                currentPosition.x + (distanceDots * state.animation.value),
                 state.firstDotPosition!!.y
             )
             drawCircle(
@@ -45,17 +45,17 @@ fun firstFilledDot(state: IndicatorState) {
         Canvas(
             Modifier.fillMaxWidth()
         ) {
-            var currentPosition = state.getTargetValue(state.currentPosition)
+            var currentPosition = state.getOffset(state.currentPosition)
 
             //This is gonna be the first filled dot
-            var firstDotAnimated = Offset(
+            var dot = Offset(
                 currentPosition.x,
                 state.firstDotPosition!!.y
             )
             drawCircle(
                 color = Color.Black,
                 radius = state.dotSettings.radius,
-                center = firstDotAnimated,
+                center = dot,
                 alpha = 0.8f
             )
         }
@@ -69,13 +69,13 @@ fun secondFilledDot(state: IndicatorState) {
         Canvas(
             Modifier.fillMaxWidth()
         ) {
-            var targetPosition = state.getTargetValue(state.targetPosition)
-            var currentPosition = state.getTargetValue(state.currentPosition)
-            var distanceFirstCircle = (targetPosition.x - currentPosition.x)
+            var targetPosition = state.getOffset(state.targetPosition)
+            var currentPosition = state.getOffset(state.currentPosition)
+            var distanceDots = (targetPosition.x - currentPosition.x)
 
             //This is gonna be the first filled dot
             var secondDotAnimated = Offset(
-                currentPosition.x + (distanceFirstCircle * state.animationSecond.value),
+                currentPosition.x + (distanceDots * state.animationSecond.value),
                 state.firstDotPosition!!.y
             )
             drawCircle(
@@ -89,17 +89,17 @@ fun secondFilledDot(state: IndicatorState) {
         Canvas(
             Modifier.fillMaxWidth()
         ) {
-            var currentPosition = state.getTargetValue(state.currentPosition)
+            var currentPosition = state.getOffset(state.currentPosition)
 
             //This is gonna be the first filled dot
-            var secondDotAnimated = Offset(
+            var dot = Offset(
                 currentPosition.x,
                 state.firstDotPosition!!.y
             )
             drawCircle(
                 color = Color.Black,
                 radius = state.dotSettings.radius,
-                center = secondDotAnimated,
+                center = dot,
                 alpha = 0.8f
             )
         }
@@ -112,16 +112,16 @@ fun drawUnion(state: IndicatorState) {
         Canvas(
             Modifier.fillMaxWidth()
         ) {
-            var targetPosition = state.getTargetValue(state.targetPosition)
-            var currentPosition = state.getTargetValue(state.currentPosition)
-            var distanceFirstCircle = (targetPosition.x - currentPosition.x)
+            var targetPosition = state.getOffset(state.targetPosition)
+            var currentPosition = state.getOffset(state.currentPosition)
+            var distanceDot = (targetPosition.x - currentPosition.x)
 
             var firstDotAnimated = Offset(
-                currentPosition.x + (distanceFirstCircle * state.animation.value),
+                currentPosition.x + (distanceDot * state.animation.value),
                 state.firstDotPosition!!.y
             )
             var secondDotAnimated = Offset(
-                currentPosition.x + (distanceFirstCircle * state.animationSecond.value),
+                currentPosition.x + (distanceDot * state.animationSecond.value),
                 state.firstDotPosition!!.y
             )
             //This gonna be the rectangle between filled dots
@@ -220,7 +220,7 @@ class IndicatorState @ExperimentalPagerApi constructor(
         )
     }
 
-    fun getTargetValue(target: Int) = Offset(
+    fun getOffset(target: Int) = Offset(
         firstDotPosition!!.x + dotSettings.distanceBetweenDots * target,
         firstDotPosition!!.y
     )
@@ -231,5 +231,4 @@ class IndicatorState @ExperimentalPagerApi constructor(
         var distanceBetweenDots: Float = radius * 5,
         var color: Color = Color.White
     )
-
 }
