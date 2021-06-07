@@ -187,7 +187,7 @@ private fun Rect(day: Int, calendarData: CalendarData) {
     } else {
         SquareDayState.IDLE
     }
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -244,15 +244,19 @@ class CalendarData(private val scope: CoroutineScope) {
 
     fun click(day: Int) {
         if (nextEndDay) {
-            endDay = day
-            nextEndDay = false
-            fill()
+            if (day > startDay!!) {
+                endDay = day
+                nextEndDay = false
+                fill()
+            } else if (day == startDay) {
+                startDay = null
+                nextEndDay = false
+            }
         } else {
-
+            startDay = day
             endDay = null
             filledDays = setOf(null)
             nextEndDay = true
-            startDay = day
         }
     }
 }
