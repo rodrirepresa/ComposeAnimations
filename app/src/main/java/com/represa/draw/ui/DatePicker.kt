@@ -1,6 +1,5 @@
 package com.represa.draw.ui
 
-import android.widget.Toast
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,8 +15,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -35,13 +32,13 @@ fun DatePicker() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row() {
-            Day(1, calendarData.daysFilled)
-            Day(2, calendarData.daysFilled)
-            Day(3, calendarData.daysFilled)
-            Day(4, calendarData.daysFilled)
-            Day(5, calendarData.daysFilled)
-            Day(6, calendarData.daysFilled)
-            Day(7, calendarData.daysFilled)
+            Day(1, calendarData)
+            Day(2, calendarData)
+            Day(3, calendarData)
+            Day(4, calendarData)
+            Day(5, calendarData)
+            Day(6, calendarData)
+            Day(7, calendarData)
 
         }
         Button(onClick = {
@@ -98,8 +95,7 @@ fun DatePicker() {
 
 
 @Composable
-fun Day(day: Int, filledDays: List<Int?>) {
-
+fun Day(day: Int, calendarData: CalendarData) {
 
     Card(
         modifier = Modifier.size(50.dp),
@@ -112,24 +108,24 @@ fun Day(day: Int, filledDays: List<Int?>) {
                 .fillMaxSize()
         ) {
 
-            Rect(day, filledDays)
-            Circle()
+            Rect(day, calendarData.filledDays)
+            Circle(day, calendarData)
             Text(text = day.toString(), color = Color.Red)
         }
     }
 }
 
 @Composable
-fun Circle() {
+fun Circle(day: Int, calendarData: CalendarData) {
     var currentState by remember {
-        mutableStateOf(DayState.IDLE)
+        mutableStateOf(CircleDayState.IDLE)
     }
     val transition = updateTransition(currentState, label = "")
 
     val circleSize by transition.animateFloat(
         transitionSpec = {
             when {
-                DayState.IDLE isTransitioningTo DayState.Selected ->
+                CircleDayState.IDLE isTransitioningTo CircleDayState.Selected ->
                     spring(stiffness = Spring.StiffnessLow)
                 else ->
                     spring(stiffness = Spring.StiffnessLow)
@@ -137,9 +133,17 @@ fun Circle() {
         }
     ) { state ->
         when (state) {
-            DayState.IDLE -> 0f
-            DayState.Selected -> 1f
+            CircleDayState.IDLE -> 0f
+            CircleDayState.Selected -> 1f
         }
+    }
+
+
+
+    if (calendarData.startDay == day || calendarData.endDay == day) {
+        currentState = CircleDayState.Selected
+    } else if (calendarData.startDay != day && calendarData.endDay != day) {
+        currentState = CircleDayState.IDLE
     }
 
     Box(contentAlignment = Alignment.Center,
@@ -147,47 +151,45 @@ fun Circle() {
             .fillMaxSize()
             .drawBehind {
                 drawCircle(
-                    color = Color.Black,
+                    color = if (calendarData.startDay == day) Color.Green else Color.Black,
                     radius = circleSize * size.height / 2,
                     center = center
                 )
 
             }
             .clickable {
-                currentState = if (currentState == DayState.IDLE) {
-                    DayState.Selected
-                } else {
-                    DayState.IDLE
-                }
+                calendarData.click(day)
             }) {
     }
 }
 
 @Composable
-private fun Rect(day: Int, filledDays: List<Int?>) {
-    var currentState2 by remember {
-        mutableStateOf(DayState2.IDLE)
+private fun Rect(day: Int, filledDays: Set<Int?>) {
+    var currentState by remember {
+        mutableStateOf(SquareDayState.IDLE)
     }
-    val transition2 = updateTransition(currentState2, label = "2")
+    val transition = updateTransition(currentState, label = "2")
 
-    val filledSize by transition2.animateFloat(
+    val filledSize by transition.animateFloat(
         transitionSpec = {
             when {
-                DayState2.IDLE isTransitioningTo DayState2.Filled ->
+                SquareDayState.IDLE isTransitioningTo SquareDayState.Filled ->
                     tween(50, easing = LinearEasing)
                 else ->
-                    tween(50)
+                    snap()
             }
         }
     ) { state ->
         when (state) {
-            DayState2.IDLE -> 0f
-            DayState2.Filled -> 1f
+            SquareDayState.IDLE -> 0f
+            SquareDayState.Filled -> 1f
         }
     }
 
-    if (filledDays.contains(day)) {
-        currentState2 = DayState2.Filled
+    currentState = if (filledDays.contains(day)) {
+        SquareDayState.Filled
+    }else{
+        SquareDayState.IDLE
     }
 
     Box(
@@ -203,28 +205,46 @@ private fun Rect(day: Int, filledDays: List<Int?>) {
 }
 
 
-private enum class DayState {
+private enum class CircleDayState {
     Selected,
     IDLE
 }
 
-private enum class DayState2 {
+private enum class SquareDayState {
     Filled,
     IDLE
 }
 
 class CalendarData(private val scope: CoroutineScope) {
-    var daysFilled by mutableStateOf(listOf<Int?>(null))
+    var filledDays by mutableStateOf(setOf<Int?>(null))
+    var startDay by mutableStateOf<Int?>(null)
+    var endDay by mutableStateOf<Int?>(null)
+    var nextEndDay: Boolean = false
 
     fun fill() {
         scope.launch {
-            var list = daysFilled.toMutableList()
-            list.add(1)
-            daysFilled = list.toList()
-            delay(50)
-            list = daysFilled.toMutableList()
-            list.add(2)
-            daysFilled = list.toList()
+            var start = startDay!! + 1
+            for (i in start until endDay!!) {
+                var list = filledDays.toMutableList()
+                if (!list.contains(i)) {
+                    list.add(i)
+                }
+                filledDays = list.toSet()
+                delay(50)
+            }
+        }
+    }
+
+    fun click(day: Int) {
+        if (nextEndDay) {
+            endDay = day
+            nextEndDay = false
+            fill()
+        } else {
+            startDay = day
+            endDay = null
+            filledDays = setOf(null)
+            nextEndDay = true
         }
     }
 }
