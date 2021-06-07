@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.geometry.Size
@@ -39,11 +40,6 @@ fun DatePicker() {
             Day(5, calendarData)
             Day(6, calendarData)
             Day(7, calendarData)
-
-        }
-        Button(onClick = {
-            calendarData.fill()
-        }) {
 
         }
         /*
@@ -108,7 +104,7 @@ fun Day(day: Int, calendarData: CalendarData) {
                 .fillMaxSize()
         ) {
 
-            Rect(day, calendarData.filledDays)
+            Rect(day, calendarData)
             Circle(day, calendarData)
             Text(text = day.toString(), color = Color.Red)
         }
@@ -164,7 +160,7 @@ fun Circle(day: Int, calendarData: CalendarData) {
 }
 
 @Composable
-private fun Rect(day: Int, filledDays: Set<Int?>) {
+private fun Rect(day: Int, calendarData: CalendarData) {
     var currentState by remember {
         mutableStateOf(SquareDayState.IDLE)
     }
@@ -186,21 +182,33 @@ private fun Rect(day: Int, filledDays: Set<Int?>) {
         }
     }
 
-    currentState = if (filledDays.contains(day)) {
+    currentState = if (calendarData.filledDays.contains(day)) {
         SquareDayState.Filled
-    }else{
+    } else {
         SquareDayState.IDLE
     }
-
+    
     Box(
         modifier = Modifier
             .fillMaxSize()
             .drawBehind {
-
-
-                drawRect(Color.Cyan, size = Size(filledSize * size.width, size.height))
-
-            })
+                if (calendarData.filledDays.contains(day)) {
+                    drawRect(
+                        color = Color.Cyan,
+                        size = if (calendarData.startDay == day || calendarData.endDay == day) {
+                            Size(filledSize * size.width / 2, size.height)
+                        } else {
+                            Size(filledSize * size.width, size.height)
+                        },
+                        topLeft = if (calendarData.startDay == day) {
+                            Offset(size.width / 2, 0f)
+                        } else {
+                            Offset.Zero
+                        }
+                    )
+                }
+            }
+    )
 
 }
 
@@ -223,8 +231,7 @@ class CalendarData(private val scope: CoroutineScope) {
 
     fun fill() {
         scope.launch {
-            var start = startDay!! + 1
-            for (i in start until endDay!!) {
+            for (i in startDay!!..endDay!!) {
                 var list = filledDays.toMutableList()
                 if (!list.contains(i)) {
                     list.add(i)
@@ -241,10 +248,11 @@ class CalendarData(private val scope: CoroutineScope) {
             nextEndDay = false
             fill()
         } else {
-            startDay = day
+
             endDay = null
             filledDays = setOf(null)
             nextEndDay = true
+            startDay = day
         }
     }
 }
