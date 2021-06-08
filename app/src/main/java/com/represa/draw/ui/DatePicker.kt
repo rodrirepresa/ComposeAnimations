@@ -16,6 +16,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.LinearGradientShader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -40,7 +41,33 @@ fun DatePicker() {
             Day(5, calendarData)
             Day(6, calendarData)
             Day(7, calendarData)
-
+        }
+        Row() {
+            Day(8, calendarData)
+            Day(9, calendarData)
+            Day(10, calendarData)
+            Day(11, calendarData)
+            Day(12, calendarData)
+            Day(13, calendarData)
+            Day(14, calendarData)
+        }
+        Row() {
+            Day(15, calendarData)
+            Day(16, calendarData)
+            Day(17, calendarData)
+            Day(18, calendarData)
+            Day(19, calendarData)
+            Day(20, calendarData)
+            Day(21, calendarData)
+        }
+        Row() {
+            Day(22, calendarData)
+            Day(23, calendarData)
+            Day(24, calendarData)
+            Day(25, calendarData)
+            Day(26, calendarData)
+            Day(27, calendarData)
+            Day(28, calendarData)
         }
         /*
             Row(
@@ -122,9 +149,9 @@ fun Circle(day: Int, calendarData: CalendarData) {
         transitionSpec = {
             when {
                 CircleDayState.IDLE isTransitioningTo CircleDayState.Selected ->
-                    spring(stiffness = Spring.StiffnessLow)
+                    spring(stiffness = 600f)
                 else ->
-                    spring(stiffness = Spring.StiffnessLow)
+                    spring(stiffness = 600f)
             }
         }
     ) { state ->
@@ -133,8 +160,6 @@ fun Circle(day: Int, calendarData: CalendarData) {
             CircleDayState.Selected -> 1f
         }
     }
-
-
 
     if (calendarData.startDay == day || calendarData.endDay == day) {
         currentState = CircleDayState.Selected
@@ -170,7 +195,7 @@ private fun Rect(day: Int, calendarData: CalendarData) {
         transitionSpec = {
             when {
                 SquareDayState.IDLE isTransitioningTo SquareDayState.Filled ->
-                    tween(50, easing = LinearEasing)
+                    tween(calendarData.squareSpeed, easing = LinearEasing)
                 else ->
                     snap()
             }
@@ -228,16 +253,17 @@ class CalendarData(private val scope: CoroutineScope) {
     var startDay by mutableStateOf<Int?>(null)
     var endDay by mutableStateOf<Int?>(null)
     var nextEndDay: Boolean = false
+    var squareSpeed: Int = 50
+    val MAX_SPEED = 200
 
     fun fill() {
         scope.launch {
+            squareSpeed = MAX_SPEED / (endDay!! - startDay!!)
             for (i in startDay!!..endDay!!) {
                 var list = filledDays.toMutableList()
-                if (!list.contains(i)) {
-                    list.add(i)
-                }
+                list.add(i)
                 filledDays = list.toSet()
-                delay(50)
+                delay(squareSpeed.toLong())
             }
         }
     }
@@ -248,15 +274,19 @@ class CalendarData(private val scope: CoroutineScope) {
                 endDay = day
                 nextEndDay = false
                 fill()
-            } else if (day == startDay) {
-                startDay = null
-                nextEndDay = false
+            } else {
+                startDay(day)
             }
         } else {
-            startDay = day
-            endDay = null
-            filledDays = setOf(null)
-            nextEndDay = true
+            startDay(day)
         }
+    }
+
+    fun startDay(day: Int) {
+        startDay = day
+        endDay = null
+        filledDays = setOf(null)
+        nextEndDay = true
+        squareSpeed = 50
     }
 }
