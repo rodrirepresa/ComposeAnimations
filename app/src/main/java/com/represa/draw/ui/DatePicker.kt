@@ -219,7 +219,7 @@ fun Day(day: Int, calendarData: CalendarData) {
             //Rect(day, calendarData)
             SquareTest(day, calendarData)
             Circle(day, calendarData)
-            Text(text = day.toString(), color = Color.Red)
+            Text(text = day.toString(), color = if(calendarData.startDay == day || calendarData.endDay == day) Color.White else Color.Black)
         }
     }
 }
@@ -259,7 +259,7 @@ fun Circle(day: Int, calendarData: CalendarData) {
             .fillMaxSize()
             .drawBehind {
                 drawCircle(
-                    color = if (calendarData.startDay == day) Color.Green else Color.Black,
+                    color = Color.Black,
                     radius = circleSize * size.height / 2,
                     center = center
                 )
