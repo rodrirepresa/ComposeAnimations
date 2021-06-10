@@ -4,142 +4,151 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.text.style.TextAlign
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@ExperimentalMaterialApi
 @Composable
 fun DatePicker() {
     var coroutineScope = rememberCoroutineScope()
     var calendarData = remember { CalendarData(coroutineScope) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFFCFCFF)),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row() {
-            Day(1, calendarData)
-            Day(2, calendarData)
-            Day(3, calendarData)
-            Day(4, calendarData)
-            Day(5, calendarData)
-            Day(6, calendarData)
-            Day(7, calendarData)
-        }
-        Row(Modifier.fillMaxWidth().height(20.dp)) {
+    val bottomSheetScaffoldState = rememberModalBottomSheetState(
+        ModalBottomSheetValue.HalfExpanded
+    )
 
-        }
-        Row() {
-            Day(8, calendarData)
-            Day(9, calendarData)
-            Day(10, calendarData)
-            Day(11, calendarData)
-            Day(12, calendarData)
-            Day(13, calendarData)
-            Day(14, calendarData)
-        }
-        Row(Modifier.fillMaxWidth().height(20.dp)) {
-
-        }
-        Row() {
-            Day(15, calendarData)
-            Day(16, calendarData)
-            Day(17, calendarData)
-            Day(18, calendarData)
-            Day(19, calendarData)
-            Day(20, calendarData)
-            Day(21, calendarData)
-        }
-        Row(Modifier.fillMaxWidth().height(20.dp)) {
-
-        }
-        Row() {
-            Day(22, calendarData)
-            Day(23, calendarData)
-            Day(24, calendarData)
-            Day(25, calendarData)
-            Day(26, calendarData)
-            Day(27, calendarData)
-            Day(28, calendarData)
-        }
-
-        /*Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Card(Modifier.size(350.dp)) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                ) {
-                    Row() {
-                        for (i in 1..7) {
-                            Day(i, calendarData)
-                        }
-                    }
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(40.dp)) {
-
-                    }
-                    Row() {
-                        for (i in 8..14) {
-                            Day(i, calendarData)
-                        }
-                    }
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(40.dp)) {
-
-                    }
-                    Row() {
-                        for (i in 15..21) {
-                            Day(i, calendarData)
-                        }
-                    }
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(40.dp)) {
-
-                    }
-                    Row() {
-                        for (i in 22..28) {
-                            Day(i, calendarData)
-                        }
-                    }
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(40.dp)) {
-
-                    }
+    ModalBottomSheetLayout(sheetState = bottomSheetScaffoldState,
+        sheetShape = RoundedCornerShape(20.dp),
+        sheetContent = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .padding(25.dp, 10.dp),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Indicator()
+                WeekDays()
+                Separator()
+                Row() {
+                    Day(1, calendarData, Modifier.weight(1f))
+                    Day(2, calendarData, Modifier.weight(1f))
+                    Day(3, calendarData, Modifier.weight(1f))
+                    Day(4, calendarData, Modifier.weight(1f))
+                    Day(5, calendarData, Modifier.weight(1f))
+                    Day(6, calendarData, Modifier.weight(1f))
+                    Day(7, calendarData, Modifier.weight(1f))
                 }
+                Row() {
+                    Day(8, calendarData, Modifier.weight(1f))
+                    Day(9, calendarData, Modifier.weight(1f))
+                    Day(10, calendarData, Modifier.weight(1f))
+                    Day(11, calendarData, Modifier.weight(1f))
+                    Day(12, calendarData, Modifier.weight(1f))
+                    Day(13, calendarData, Modifier.weight(1f))
+                    Day(14, calendarData, Modifier.weight(1f))
+                }
+                Row() {
+                    Day(15, calendarData, Modifier.weight(1f))
+                    Day(16, calendarData, Modifier.weight(1f))
+                    Day(17, calendarData, Modifier.weight(1f))
+                    Day(18, calendarData, Modifier.weight(1f))
+                    Day(19, calendarData, Modifier.weight(1f))
+                    Day(20, calendarData, Modifier.weight(1f))
+                    Day(21, calendarData, Modifier.weight(1f))
+                }
+                Row() {
+                    Day(22, calendarData, Modifier.weight(1f))
+                    Day(23, calendarData, Modifier.weight(1f))
+                    Day(24, calendarData, Modifier.weight(1f))
+                    Day(25, calendarData, Modifier.weight(1f))
+                    Day(26, calendarData, Modifier.weight(1f))
+                    Day(27, calendarData, Modifier.weight(1f))
+                    Day(28, calendarData, Modifier.weight(1f))
+                }
+
+                /*Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Card(Modifier.size(350.dp)) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                        ) {
+                            Row() {
+                                for (i in 1..7) {
+                                    Day(i, calendarData)
+                                }
+                            }
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(40.dp)) {
+
+                            }
+                            Row() {
+                                for (i in 8..14) {
+                                    Day(i, calendarData)
+                                }
+                            }
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(40.dp)) {
+
+                            }
+                            Row() {
+                                for (i in 15..21) {
+                                    Day(i, calendarData)
+                                }
+                            }
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(40.dp)) {
+
+                            }
+                            Row() {
+                                for (i in 22..28) {
+                                    Day(i, calendarData)
+                                }
+                            }
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(40.dp)) {
+
+                            }
+                        }
+                    }
+                }*/
             }
-        }*/
+        }) {
+
     }
+
 
 }
 
 
 @Composable
-fun Day(day: Int, calendarData: CalendarData) {
+fun Day(day: Int, calendarData: CalendarData, modifier: Modifier) {
 
     var currentState by remember {
         mutableStateOf(CircleDayState.IDLE)
@@ -163,7 +172,7 @@ fun Day(day: Int, calendarData: CalendarData) {
     }
 
     Card(
-        modifier = Modifier.size(50.dp),
+        modifier = modifier.height(50.dp),
         elevation = 0.dp,
         shape = RoundedCornerShape(0.dp)
     ) {
@@ -179,7 +188,7 @@ fun Day(day: Int, calendarData: CalendarData) {
                     }
                 }
                 .drawBehind {
-                   /* var brush = Brush.verticalGradient(
+                    /* var brush = Brush.verticalGradient(
                         colors = listOf(
                             Color.LightGray,
                             Color.Transparent,
@@ -219,7 +228,10 @@ fun Day(day: Int, calendarData: CalendarData) {
             //Rect(day, calendarData)
             SquareTest(day, calendarData)
             Circle(day, calendarData)
-            Text(text = day.toString(), color = if(calendarData.startDay == day || calendarData.endDay == day) Color.White else Color.Black)
+            Text(
+                text = day.toString(),
+                color = if (calendarData.startDay == day || calendarData.endDay == day) Color.White else Color.Black
+            )
         }
     }
 }
@@ -260,7 +272,7 @@ fun Circle(day: Int, calendarData: CalendarData) {
             .drawBehind {
                 drawCircle(
                     color = Color.Black,
-                    radius = circleSize * size.height / 2,
+                    radius = circleSize * size.width / 2,
                     center = center
                 )
 
@@ -377,6 +389,38 @@ private fun Rect(day: Int, calendarData: CalendarData) {
 
 }
 
+@Composable
+fun WeekDays() {
+    Row(modifier = Modifier.padding(0.dp, 40.dp, 0.dp, 10.dp)) {
+        Text(text = "Sun", modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+        Text(text = "Mon", modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+        Text(text = "Tue", modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+        Text(text = "Wed", modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+        Text(text = "Thu", modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+        Text(text = "Fri", modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+        Text(text = "Sat", modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+    }
+}
+
+@Composable
+fun Separator(){
+    Box(modifier = Modifier
+        .fillMaxWidth()
+        .height(1.dp)
+        .background(Color(0xFFEEEEEE)))
+}
+
+@Composable
+fun Indicator(){
+    Box(modifier = Modifier
+        .clip(CircleShape)
+        .width(70.dp)
+        .height(5.dp)
+        .background(Color.LightGray))
+}
+
+
+
 
 private enum class CircleDayState {
     Selected,
@@ -397,15 +441,15 @@ class CalendarData(private val scope: CoroutineScope) {
     val MAX_SPEED = 200
 
     fun fill() {
-        scope.launch {
-            //squareSpeed = MAX_SPEED / (endDay!! - startDay!!)
-            var list = filledDays.toMutableList()
-            for (i in startDay!!..endDay!!) {
-                list.add(i)
-                //delay(squareSpeed.toLong())
-            }
-            filledDays = list.toSet()
+        // scope.launch {
+        //squareSpeed = MAX_SPEED / (endDay!! - startDay!!)
+        var list = filledDays.toMutableList()
+        for (i in startDay!!..endDay!!) {
+            list.add(i)
+            //delay(squareSpeed.toLong())
         }
+        filledDays = list.toSet()
+        //}
     }
 
     fun click(day: Int) {
