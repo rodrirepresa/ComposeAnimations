@@ -67,10 +67,16 @@ fun Decoration() {
 
 @Composable
 fun Weeks(calendarData: CalendarData) {
-    calendarData.monthDays.keys.forEach { week ->
-        Row() {
-            calendarData.monthDays[week]!!.forEach { day ->
-                Day(day, calendarData, Modifier.weight(1f))
+    calendarData.apply {
+        monthDays.keys.forEach { week ->
+            Row() {
+                monthDays[week]!!.forEach { day ->
+                    Day(day, calendarData, Modifier.weight(1f))
+                }
+                var daysInWeek = monthDays.getValue(week).size
+                if(daysInWeek < 7){
+                    Box(modifier = Modifier.weight((7 - daysInWeek).toFloat()))
+                }
             }
         }
     }
