@@ -294,9 +294,9 @@ private fun SquareTest(day: Int, calendarData: CalendarData) {
         transitionSpec = {
             when {
                 SquareDayState.IDLE isTransitioningTo SquareDayState.Filled ->
-                    tween(1000)
+                    tween(500)
                 else ->
-                    tween(1000)
+                    tween(650)
             }
         }
     ) { state ->
@@ -433,23 +433,18 @@ private enum class SquareDayState {
 }
 
 class CalendarData(private val scope: CoroutineScope) {
-    var filledDays by mutableStateOf(setOf<Int?>(null))
+    var filledDays = mutableStateListOf<Int>()
     var startDay by mutableStateOf<Int?>(null)
     var endDay by mutableStateOf<Int?>(null)
     var nextEndDay: Boolean = false
     var squareSpeed: Int = 50
-    val MAX_SPEED = 200
 
     fun fill() {
-        // scope.launch {
-        //squareSpeed = MAX_SPEED / (endDay!! - startDay!!)
-        var list = filledDays.toMutableList()
+        var list = mutableListOf<Int>()
         for (i in startDay!!..endDay!!) {
             list.add(i)
-            //delay(squareSpeed.toLong())
         }
-        filledDays = list.toSet()
-        //}
+        filledDays.addAll(list)
     }
 
     fun click(day: Int) {
@@ -457,7 +452,9 @@ class CalendarData(private val scope: CoroutineScope) {
             if (day > startDay!!) {
                 endDay = day
                 nextEndDay = false
-                fill()
+                if(filledDays.isEmpty()) {
+                    fill()
+                }
             } else {
                 startDay(day)
             }
@@ -469,7 +466,7 @@ class CalendarData(private val scope: CoroutineScope) {
     fun startDay(day: Int) {
         startDay = day
         endDay = null
-        filledDays = setOf(null)
+        filledDays.removeRange(0, filledDays.size)
         nextEndDay = true
         squareSpeed = 50
     }
