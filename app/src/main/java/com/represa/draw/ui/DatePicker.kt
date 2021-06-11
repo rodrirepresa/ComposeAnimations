@@ -426,7 +426,7 @@ class CalendarData(private val scope: CoroutineScope) {
     fun startDay(day: Int) {
         startDay = day
         endDay = null
-        filledDays.removeRange(0, filledDays.size)
+        filledDays.clear()
         nextEndDay = true
     }
 
