@@ -197,9 +197,9 @@ fun Circle(day: Int, calendarData: CalendarData) {
         transitionSpec = {
             when {
                 CircleDayState.IDLE isTransitioningTo CircleDayState.Selected ->
-                    spring(stiffness = 600f)
+                    spring(stiffness = 200f)
                 else ->
-                    spring(stiffness = 600f)
+                    spring(stiffness = 200f)
             }
         }
     ) { state ->
