@@ -1,5 +1,6 @@
 package com.represa.draw
 
+import android.media.Rating
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,6 +15,8 @@ import androidx.compose.ui.graphics.Color
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.represa.draw.ui.DatePicker
+import com.represa.draw.ui.SplashScreen
+import com.represa.draw.ui.rate
 
 class MainActivity : ComponentActivity() {
     @ExperimentalMaterialApi
@@ -23,7 +26,11 @@ class MainActivity : ComponentActivity() {
         setContent {
                 Surface(color = Color.White, modifier = Modifier.fillMaxSize()) {
                     updateStatusBar()
-                    DatePicker()
+                    //PhysicoChest()
+                    //DotsIndicator()
+                    //DatePicker()
+                    //rate()
+                    SplashScreen()
                 }
 
         }
