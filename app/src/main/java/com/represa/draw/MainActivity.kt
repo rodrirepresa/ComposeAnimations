@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.represa.draw.ui.BottomBar
 import com.represa.draw.ui.RoundIndicators
 
 class MainActivity : ComponentActivity() {
@@ -23,7 +24,7 @@ class MainActivity : ComponentActivity() {
         setContent {
                 Surface(color = Color.White, modifier = Modifier.fillMaxSize()) {
                     updateStatusBar()
-                    RoundIndicators()
+                    BottomBar()
                 }
 
         }
