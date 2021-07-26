@@ -292,7 +292,7 @@ fun Categories(
                 Card(
                     modifier = Modifier
                         .size(30.dp),
-                    elevation = 10.dp,
+                    elevation = 5.dp,
                     shape = RoundedCornerShape(30.dp),
                     backgroundColor = Color.LightGray
                 ) {
@@ -434,14 +434,8 @@ class BottomBarState(var scope: CoroutineScope) {
                     targetValue = 1f,
                     animationSpec = tween(durationMillis = 100, easing = LinearEasing)
                 )
-                subCategoriesVisibility = !subCategoriesVisibility
-                delay(300)
-                categoriesVisibility = !categoriesVisibility
                 animationState = AnimationState.IDLE
                 animation.snapTo(0f)
-                previousIndex = 0
-                currentIndex = 0
-                state.scrollToItem(0)
             }
         }
     }
