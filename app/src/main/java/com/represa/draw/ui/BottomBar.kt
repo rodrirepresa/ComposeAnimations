@@ -249,8 +249,8 @@ fun DrawIndicator(
                         var topLeft = when {
                             currentIndex > previousIndex -> {
                                 Offset(
-                                    to!!
-                                        .offset * animation.value, contentPadding
+                                    (to!!
+                                        .offset + contentPadding) * animation.value, contentPadding
                                 )
                             }
                             currentIndex < previousIndex -> {
@@ -469,7 +469,7 @@ class BottomBarState(var scope: CoroutineScope) {
                 animationState = AnimationState.SCROLLING
                 animation.animateTo(
                     targetValue = 1f,
-                    animationSpec = tween(durationMillis = 100, easing = LinearEasing)
+                    animationSpec = tween(durationMillis = 200, easing = LinearEasing)
                 )
                 categoriesVisibility = !categoriesVisibility
                 delay(350)
