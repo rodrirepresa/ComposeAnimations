@@ -16,8 +16,6 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Backpack
-import androidx.compose.material.icons.filled.StarOutline
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,10 +25,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.represa.draw.extensions.safeLet
@@ -169,7 +164,7 @@ fun CategoriesRow(
         )
     ) {
 
-        DrawIndicator(state, bottomBarState, contentPadding)
+        DrawIndicator(state, bottomBarState, contentPadding, false)
         Categories(state, bottomBarState, items, false)
     }
 }
@@ -203,33 +198,55 @@ fun SubCategoryRow(
         )
     ) {
 
-        DrawIndicator(state, bottomBarState, contentPadding)
+        DrawIndicator(state, bottomBarState, contentPadding, true)
         Categories(state, bottomBarState, items, true)
     }
 
 }
 
+/**
+ * @contentPadding -> Represent the margin of our Box(), needed to show properly the blue indicator
+ */
 @Composable
-fun DrawIndicator(state: LazyListState, bottomBarState: BottomBarState, contentPadding: Float) {
+fun DrawIndicator(
+    state: LazyListState,
+    bottomBarState: BottomBarState,
+    contentPadding: Float,
+    subCategory: Boolean
+) {
+    //When we show the back arrow, we have to add this size to calculate properly the beggining Offset of our Box()
+    var backArrowOffset = if (subCategory && bottomBarState.currentIndex == 0) {
+        with(LocalDensity.current) { 40.dp.toPx() }
+    } else {
+        0f
+    }
+
+    //As our Box() has a 10.dp padding, we need to rest this padding to show the indicator with the size of the text
+    var sizeOffset = backArrowOffset + contentPadding
+
     Canvas(modifier = Modifier) {
         when (bottomBarState.animationState) {
             AnimationState.SCROLLING -> {
                 with(bottomBarState) {
-                    var from = state.getItem(previousIndex)
-                    var to = state.getItem(currentIndex)
-                    safeLet(to, from) { to, from ->
-                        var distance = to.offset - from.offset
+                    state.getDistance(previousIndex, currentIndex)?.let { distance ->
                         drawRoundRect(
                             color = Color.Blue,
                             topLeft = Offset(
-                                from.offset.toFloat() + contentPadding + (distance * animation.value),
+                                state.getTopLeftAxisX(
+                                    previousIndex,
+                                    contentPadding,
+                                    backArrowOffset
+                                ) + (distance * animation.value),
                                 contentPadding
                             ),
-                            size = Size(to.size.toFloat() - contentPadding, contentPadding * 3),
+                            size = state.getSize(currentIndex, sizeOffset, contentPadding * 3),
                             cornerRadius = CornerRadius(40f)
                         )
-                    } ?: kotlin.run {
-                        var distance = when {
+                    } ?: run {
+
+                        var to = state.getItem(currentIndex)
+
+                        var topLeft = when {
                             currentIndex > previousIndex -> {
                                 Offset(
                                     to!!
@@ -238,7 +255,7 @@ fun DrawIndicator(state: LazyListState, bottomBarState: BottomBarState, contentP
                             }
                             currentIndex < previousIndex -> {
                                 Offset(
-                                    state.layoutInfo.viewportEndOffset - (state.layoutInfo.viewportEndOffset - to!!.offset - contentPadding) * (animation.value),
+                                    state.layoutInfo.viewportEndOffset - (state.layoutInfo.viewportEndOffset - to!!.offset - contentPadding) * (animation.value) + backArrowOffset,
                                     contentPadding
                                 )
                             }
@@ -248,19 +265,22 @@ fun DrawIndicator(state: LazyListState, bottomBarState: BottomBarState, contentP
                         }
                         drawRoundRect(
                             color = Color.Blue,
-                            topLeft = distance,
-                            size = Size(to.size.toFloat() - contentPadding, contentPadding * 3),
+                            topLeft = topLeft,
+                            size = state.getSize(currentIndex, contentPadding, contentPadding * 3),
                             cornerRadius = CornerRadius(40f)
                         )
                     }
                 }
             }
             AnimationState.IDLE -> {
-                state.getItem(bottomBarState.currentIndex)?.let {
+                with(bottomBarState) {
                     drawRoundRect(
                         color = Color.Blue,
-                        topLeft = Offset(it.offset.toFloat() + contentPadding, contentPadding),
-                        size = Size(it.size.toFloat() - contentPadding, contentPadding * 3),
+                        topLeft = Offset(
+                            state.getTopLeftAxisX(currentIndex, contentPadding, backArrowOffset),
+                            contentPadding
+                        ),
+                        size = state.getSize(currentIndex, sizeOffset, contentPadding * 3),
                         cornerRadius = CornerRadius(40f)
                     )
                 }
@@ -281,20 +301,22 @@ fun Categories(
     var scope = rememberCoroutineScope()
 
     LazyRow(
-        modifier = Modifier
-            .padding(0.dp, 10.dp),
+        modifier = Modifier,
         contentPadding = PaddingValues(10.dp, 0.dp),
         state = state
     ) {
         itemsIndexed(items) { index, item ->
 
+
             if (subCategory && index == 0) {
                 Card(
                     modifier = Modifier
-                        .size(30.dp),
+                        .fillMaxHeight()
+                        .width(40.dp)
+                        .padding(0.dp, 10.dp, 10.dp, 10.dp),
                     elevation = 5.dp,
                     shape = RoundedCornerShape(30.dp),
-                    backgroundColor = Color.LightGray
+                    backgroundColor = Color.LightGray,
                 ) {
                     Icon(imageVector = Icons.Default.ArrowBack,
                         contentDescription = "",
@@ -311,7 +333,7 @@ fun Categories(
                     .fillMaxHeight()
                     .wrapContentWidth()
                     .padding(0.dp, 0.dp, 10.dp, 0.dp)
-                    //.background(Color.Blue)
+                    //.background(Color.Yellow)
                     .clickable {
                         //bottomBarState.currentIndex = index
                         state
@@ -356,7 +378,6 @@ fun Categories(
 
 }
 
-
 private fun LazyListState.toScroll(
     index: Int,
     positionFromMiddle: Position,
@@ -383,6 +404,38 @@ private fun LazyListState.toScroll(
 private fun LazyListState.getItem(index: Int): LazyListItemInfo? {
     return layoutInfo.visibleItemsInfo.firstOrNull() {
         it.index == index
+    }
+}
+
+private fun LazyListState.getTopLeftAxisX(
+    index: Int,
+    contentPadding: Float,
+    backArrowOffset: Float = 0f
+): Float {
+    var item = getItem(index)
+    item?.let {
+        return item.offset.toFloat() + contentPadding + backArrowOffset
+    } ?: run {
+        return 0f
+    }
+}
+
+private fun LazyListState.getDistance(from: Int, to: Int): Int? {
+    var from = getItem(from)
+    var to = getItem(to)
+    safeLet(from, to) { from, to ->
+        return to.offset - from.offset
+    } ?: run {
+        return null
+    }
+}
+
+private fun LazyListState.getSize(index: Int, contentPadding: Float, height: Float): Size {
+    var item = getItem(index)
+    item?.let {
+        return Size(item.size.toFloat() - contentPadding, height)
+    } ?: run {
+        return Size.Zero
     }
 }
 
