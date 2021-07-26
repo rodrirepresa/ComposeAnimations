@@ -12,11 +12,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Backpack
+import androidx.compose.material.icons.filled.StarOutline
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -118,54 +124,87 @@ fun BottomBar() {
             shape = RoundedCornerShape(30.dp)
 
         ) {
-
-            val density = LocalDensity.current
-
-            AnimatedVisibility(
-                visible = bottomBarState.categoriesVisibility,
-                enter = slideInVertically(
-                    // Slide in from 40 dp from the top.
-                    initialOffsetY = { with(density) { -40.dp.roundToPx() } },
-                    animationSpec = tween(durationMillis = 300, easing = LinearEasing)
-                ) + fadeIn(
-                    // Fade in with the initial alpha of 0.3f.
-                    initialAlpha = 0.3f
-                ),
-                exit = slideOutVertically(
-                    animationSpec = tween(durationMillis = 300, easing = LinearEasing)
-
-                ) + fadeOut(
-                    animationSpec = tween(durationMillis = 300, easing = LinearEasing)
-                )
-            ) {
-
-                DrawIndicator(state, bottomBarState, contentPadding)
-                Categories(state, bottomBarState, items)
-            }
-
-            AnimatedVisibility(
-                visible = bottomBarState.subCategoriesVisibility,
-                enter = slideInVertically(
-                    // Slide in from 40 dp from the top.
-                    initialOffsetY = { with(density) { 40.dp.roundToPx() } },
-                    animationSpec = tween(durationMillis = 300, easing = LinearEasing)
-                ) + fadeIn(
-                    // Fade in with the initial alpha of 0.3f.
-                    initialAlpha = 0.3f
-                ),
-                exit = slideOutVertically(
-                    targetOffsetY = { with(density) { 40.dp.roundToPx() } },
-                    animationSpec = tween(durationMillis = 300, easing = LinearEasing)
-
-                ) + fadeOut(
-                    animationSpec = tween(durationMillis = 300, easing = LinearEasing)
-                )
-            ) {
-
-                DrawIndicator(state, bottomBarState, contentPadding)
-                Categories(state, bottomBarState, items2)
-            }
+            CategoriesRow(
+                state = state,
+                bottomBarState = bottomBarState,
+                items = items,
+                contentPadding = contentPadding
+            )
+            SubCategoryRow(
+                state = state,
+                bottomBarState = bottomBarState,
+                items = items2,
+                contentPadding = contentPadding
+            )
         }
+    }
+
+}
+
+@ExperimentalAnimationApi
+@Composable
+fun CategoriesRow(
+    state: LazyListState,
+    bottomBarState: BottomBarState,
+    items: List<String>,
+    contentPadding: Float
+) {
+    val density = LocalDensity.current
+
+    AnimatedVisibility(
+        visible = bottomBarState.categoriesVisibility,
+        enter = slideInVertically(
+            // Slide in from 40 dp from the top.
+            initialOffsetY = { with(density) { -40.dp.roundToPx() } },
+            animationSpec = tween(durationMillis = 300, easing = LinearEasing)
+        ) + fadeIn(
+            // Fade in with the initial alpha of 0.3f.
+            initialAlpha = 0.3f
+        ),
+        exit = slideOutVertically(
+            animationSpec = tween(durationMillis = 300, easing = LinearEasing)
+
+        ) + fadeOut(
+            animationSpec = tween(durationMillis = 300, easing = LinearEasing)
+        )
+    ) {
+
+        DrawIndicator(state, bottomBarState, contentPadding)
+        Categories(state, bottomBarState, items, false)
+    }
+}
+
+@ExperimentalAnimationApi
+@Composable
+fun SubCategoryRow(
+    state: LazyListState,
+    bottomBarState: BottomBarState,
+    items: List<String>,
+    contentPadding: Float
+) {
+    val density = LocalDensity.current
+
+    AnimatedVisibility(
+        visible = bottomBarState.subCategoriesVisibility,
+        enter = slideInVertically(
+            // Slide in from 40 dp from the top.
+            initialOffsetY = { with(density) { 40.dp.roundToPx() } },
+            animationSpec = tween(durationMillis = 300, easing = LinearEasing)
+        ) + fadeIn(
+            // Fade in with the initial alpha of 0.3f.
+            initialAlpha = 0.3f
+        ),
+        exit = slideOutVertically(
+            targetOffsetY = { with(density) { 40.dp.roundToPx() } },
+            animationSpec = tween(durationMillis = 300, easing = LinearEasing)
+
+        ) + fadeOut(
+            animationSpec = tween(durationMillis = 300, easing = LinearEasing)
+        )
+    ) {
+
+        DrawIndicator(state, bottomBarState, contentPadding)
+        Categories(state, bottomBarState, items, true)
     }
 
 }
@@ -232,7 +271,12 @@ fun DrawIndicator(state: LazyListState, bottomBarState: BottomBarState, contentP
 
 @ExperimentalAnimationApi
 @Composable
-fun Categories(state: LazyListState, bottomBarState: BottomBarState, items: List<String>) {
+fun Categories(
+    state: LazyListState,
+    bottomBarState: BottomBarState,
+    items: List<String>,
+    subCategory: Boolean
+) {
 
     var scope = rememberCoroutineScope()
 
@@ -243,6 +287,24 @@ fun Categories(state: LazyListState, bottomBarState: BottomBarState, items: List
         state = state
     ) {
         itemsIndexed(items) { index, item ->
+
+            if (subCategory && index == 0) {
+                Card(
+                    modifier = Modifier
+                        .size(30.dp),
+                    elevation = 10.dp,
+                    shape = RoundedCornerShape(30.dp),
+                    backgroundColor = Color.LightGray
+                ) {
+                    Icon(imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "",
+                        modifier = Modifier
+                            .scale(0.6f)
+                            .clickable {
+                                bottomBarState.reset(state)
+                            })
+                }
+            }
 
             Box(
                 modifier = Modifier
@@ -382,7 +444,19 @@ class BottomBarState(var scope: CoroutineScope) {
                 state.scrollToItem(0)
             }
         }
+    }
 
+    fun reset(state: LazyListState) {
+        scope.launch {
+            subCategoriesVisibility = !subCategoriesVisibility
+            delay(300)
+            categoriesVisibility = !categoriesVisibility
+            animationState = AnimationState.IDLE
+            animation.snapTo(0f)
+            previousIndex = 0
+            currentIndex = 0
+            state.scrollToItem(0)
+        }
     }
 
 }
