@@ -121,22 +121,19 @@ fun BottomBar() {
 
             val density = LocalDensity.current
 
-            AnimatedVisibility(visible = bottomBarState.categoriesVisibility,
+            AnimatedVisibility(
+                visible = bottomBarState.categoriesVisibility,
                 enter = slideInVertically(
                     // Slide in from 40 dp from the top.
                     initialOffsetY = { with(density) { -40.dp.roundToPx() } },
                     animationSpec = tween(durationMillis = 300, easing = LinearEasing)
-                ) + expandVertically(
-                    // Expand from the top.
-                    expandFrom = Alignment.Top
                 ) + fadeIn(
                     // Fade in with the initial alpha of 0.3f.
                     initialAlpha = 0.3f
                 ),
                 exit = slideOutVertically(
                     animationSpec = tween(durationMillis = 300, easing = LinearEasing)
-                ) + shrinkVertically(
-                    animationSpec = tween(durationMillis = 300, easing = LinearEasing)
+
                 ) + fadeOut(
                     animationSpec = tween(durationMillis = 300, easing = LinearEasing)
                 )
@@ -146,14 +143,12 @@ fun BottomBar() {
                 Categories(state, bottomBarState, items)
             }
 
-            AnimatedVisibility(visible = bottomBarState.subCategoriesVisibility,
+            AnimatedVisibility(
+                visible = bottomBarState.subCategoriesVisibility,
                 enter = slideInVertically(
                     // Slide in from 40 dp from the top.
                     initialOffsetY = { with(density) { 40.dp.roundToPx() } },
                     animationSpec = tween(durationMillis = 300, easing = LinearEasing)
-                ) + expandVertically(
-                    // Expand from the top.
-                    expandFrom = Alignment.Bottom
                 ) + fadeIn(
                     // Fade in with the initial alpha of 0.3f.
                     initialAlpha = 0.3f
@@ -161,8 +156,7 @@ fun BottomBar() {
                 exit = slideOutVertically(
                     targetOffsetY = { with(density) { 40.dp.roundToPx() } },
                     animationSpec = tween(durationMillis = 300, easing = LinearEasing)
-                ) + shrinkVertically(
-                    animationSpec = tween(durationMillis = 300, easing = LinearEasing)
+
                 ) + fadeOut(
                     animationSpec = tween(durationMillis = 300, easing = LinearEasing)
                 )
@@ -352,10 +346,10 @@ class BottomBarState(var scope: CoroutineScope) {
     var subCategoriesVisibility by mutableStateOf(false)
 
 
-    fun scroll(index: Int, state: LazyListState ) {
+    fun scroll(index: Int, state: LazyListState) {
         previousIndex = currentIndex
         currentIndex = index
-        if(categoriesVisibility && !subCategoriesVisibility){
+        if (categoriesVisibility && !subCategoriesVisibility) {
             scope.launch {
                 animationState = AnimationState.SCROLLING
                 animation.animateTo(
@@ -363,7 +357,7 @@ class BottomBarState(var scope: CoroutineScope) {
                     animationSpec = tween(durationMillis = 100, easing = LinearEasing)
                 )
                 categoriesVisibility = !categoriesVisibility
-                delay(300)
+                delay(350)
                 subCategoriesVisibility = !subCategoriesVisibility
                 animationState = AnimationState.IDLE
                 animation.snapTo(0f)
@@ -371,7 +365,7 @@ class BottomBarState(var scope: CoroutineScope) {
                 currentIndex = 0
                 state.scrollToItem(0)
             }
-        }else if( !categoriesVisibility && subCategoriesVisibility){
+        } else if (!categoriesVisibility && subCategoriesVisibility) {
             scope.launch {
                 animationState = AnimationState.SCROLLING
                 animation.animateTo(
