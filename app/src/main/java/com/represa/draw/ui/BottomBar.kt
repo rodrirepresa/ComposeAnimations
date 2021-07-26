@@ -1,5 +1,6 @@
 package com.represa.draw.ui
 
+import androidx.compose.animation.*
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -16,15 +17,22 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.represa.draw.extensions.safeLet
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@ExperimentalAnimationApi
 @Composable
 fun BottomBar() {
 
@@ -38,6 +46,18 @@ fun BottomBar() {
         "SALE",
         "JUNIOR",
         "PLUS SIZE"
+    )
+
+    var items2 = listOf(
+        "ALL CLOTHING",
+        "SEASON HIGHLIGHT",
+        "T-SHIRT",
+        "DENIM",
+        "VIEW ALL",
+        "JACKETS",
+        "JEANS",
+        "TROUSERS",
+        "SHORTS"
     )
 
     //Experiment with Density and Offset
@@ -95,11 +115,62 @@ fun BottomBar() {
                 .fillMaxWidth()
                 .height(50.dp),
             elevation = 10.dp,
-            shape = RoundedCornerShape(20.dp)
+            shape = RoundedCornerShape(30.dp)
 
         ) {
-            DrawIndicator(state, bottomBarState, contentPadding)
-            Categories(state, bottomBarState, items)
+
+            val density = LocalDensity.current
+
+            AnimatedVisibility(visible = bottomBarState.categoriesVisibility,
+                enter = slideInVertically(
+                    // Slide in from 40 dp from the top.
+                    initialOffsetY = { with(density) { -40.dp.roundToPx() } },
+                    animationSpec = tween(durationMillis = 300, easing = LinearEasing)
+                ) + expandVertically(
+                    // Expand from the top.
+                    expandFrom = Alignment.Top
+                ) + fadeIn(
+                    // Fade in with the initial alpha of 0.3f.
+                    initialAlpha = 0.3f
+                ),
+                exit = slideOutVertically(
+                    animationSpec = tween(durationMillis = 300, easing = LinearEasing)
+                ) + shrinkVertically(
+                    animationSpec = tween(durationMillis = 300, easing = LinearEasing)
+                ) + fadeOut(
+                    animationSpec = tween(durationMillis = 300, easing = LinearEasing)
+                )
+            ) {
+
+                DrawIndicator(state, bottomBarState, contentPadding)
+                Categories(state, bottomBarState, items)
+            }
+
+            AnimatedVisibility(visible = bottomBarState.subCategoriesVisibility,
+                enter = slideInVertically(
+                    // Slide in from 40 dp from the top.
+                    initialOffsetY = { with(density) { 40.dp.roundToPx() } },
+                    animationSpec = tween(durationMillis = 300, easing = LinearEasing)
+                ) + expandVertically(
+                    // Expand from the top.
+                    expandFrom = Alignment.Bottom
+                ) + fadeIn(
+                    // Fade in with the initial alpha of 0.3f.
+                    initialAlpha = 0.3f
+                ),
+                exit = slideOutVertically(
+                    targetOffsetY = { with(density) { 40.dp.roundToPx() } },
+                    animationSpec = tween(durationMillis = 300, easing = LinearEasing)
+                ) + shrinkVertically(
+                    animationSpec = tween(durationMillis = 300, easing = LinearEasing)
+                ) + fadeOut(
+                    animationSpec = tween(durationMillis = 300, easing = LinearEasing)
+                )
+            ) {
+
+                DrawIndicator(state, bottomBarState, contentPadding)
+                Categories(state, bottomBarState, items2)
+            }
         }
     }
 
@@ -115,13 +186,14 @@ fun DrawIndicator(state: LazyListState, bottomBarState: BottomBarState, contentP
                     var to = state.getItem(currentIndex)
                     safeLet(to, from) { to, from ->
                         var distance = to.offset - from.offset
-                        drawRect(
-                            color = Color.Red,
+                        drawRoundRect(
+                            color = Color.Blue,
                             topLeft = Offset(
                                 from.offset.toFloat() + contentPadding + (distance * animation.value),
                                 contentPadding
                             ),
-                            size = Size(to.size.toFloat() - contentPadding, contentPadding * 3)
+                            size = Size(to.size.toFloat() - contentPadding, contentPadding * 3),
+                            cornerRadius = CornerRadius(40f)
                         )
                     } ?: kotlin.run {
                         var distance = when {
@@ -141,20 +213,22 @@ fun DrawIndicator(state: LazyListState, bottomBarState: BottomBarState, contentP
                                 Offset(to!!.offset.toFloat(), contentPadding)
                             }
                         }
-                        drawRect(
-                            color = Color.Red,
+                        drawRoundRect(
+                            color = Color.Blue,
                             topLeft = distance,
-                            size = Size(to.size.toFloat() - contentPadding, contentPadding * 3)
+                            size = Size(to.size.toFloat() - contentPadding, contentPadding * 3),
+                            cornerRadius = CornerRadius(40f)
                         )
                     }
                 }
             }
             AnimationState.IDLE -> {
                 state.getItem(bottomBarState.currentIndex)?.let {
-                    drawRect(
-                        color = Color.Red,
+                    drawRoundRect(
+                        color = Color.Blue,
                         topLeft = Offset(it.offset.toFloat() + contentPadding, contentPadding),
-                        size = Size(it.size.toFloat() - contentPadding, contentPadding * 3)
+                        size = Size(it.size.toFloat() - contentPadding, contentPadding * 3),
+                        cornerRadius = CornerRadius(40f)
                     )
                 }
             }
@@ -162,6 +236,7 @@ fun DrawIndicator(state: LazyListState, bottomBarState: BottomBarState, contentP
     }
 }
 
+@ExperimentalAnimationApi
 @Composable
 fun Categories(state: LazyListState, bottomBarState: BottomBarState, items: List<String>) {
 
@@ -174,6 +249,7 @@ fun Categories(state: LazyListState, bottomBarState: BottomBarState, items: List
         state = state
     ) {
         itemsIndexed(items) { index, item ->
+
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
@@ -201,7 +277,8 @@ fun Categories(state: LazyListState, bottomBarState: BottomBarState, items: List
                                         state.toScroll(
                                             index,
                                             positionFromMiddle,
-                                            bottomBarState
+                                            bottomBarState,
+                                            state
                                         )
                                     )
                                 }
@@ -212,7 +289,9 @@ fun Categories(state: LazyListState, bottomBarState: BottomBarState, items: List
             ) {
                 Text(
                     text = item, modifier = Modifier
-                        .padding(20.dp, 0.dp)
+                        .padding(20.dp, 0.dp),
+                    fontWeight = FontWeight.Bold,
+                    color = if (bottomBarState.currentIndex == index) Color.White else Color.Black
                 )
             }
         }
@@ -225,16 +304,17 @@ fun Categories(state: LazyListState, bottomBarState: BottomBarState, items: List
 private fun LazyListState.toScroll(
     index: Int,
     positionFromMiddle: Position,
-    bottomBarState: BottomBarState
+    bottomBarState: BottomBarState,
+    state: LazyListState
 ): Float {
     getItem(index)?.let { item ->
         return when (positionFromMiddle) {
             Position.RIGHT -> {
-                bottomBarState.scroll(index)
+                bottomBarState.scroll(index, state)
                 item.offset - (layoutInfo.viewportEndOffset / 2f) + item.size / 2
             }
             Position.LEFT -> {
-                bottomBarState.scroll(index)
+                bottomBarState.scroll(index, state)
                 item.size / 2 + item.offset - (layoutInfo.viewportEndOffset / 2f)
             }
             Position.IDLE -> 0f
@@ -265,22 +345,50 @@ class BottomBarState(var scope: CoroutineScope) {
 
     var animation = Animatable(initialValue = 0f)
     var previousIndex = 0
-    var currentIndex = 0
+    var currentIndex by mutableStateOf(0)
     var animationState by mutableStateOf(AnimationState.IDLE)
 
+    var categoriesVisibility by mutableStateOf(true)
+    var subCategoriesVisibility by mutableStateOf(false)
 
-    fun scroll(index: Int) {
+
+    fun scroll(index: Int, state: LazyListState ) {
         previousIndex = currentIndex
         currentIndex = index
-        scope.launch {
-            animationState = AnimationState.SCROLLING
-            animation.animateTo(
-                targetValue = 1f,
-                animationSpec = tween(durationMillis = 100, easing = LinearEasing)
-            )
-            animationState = AnimationState.IDLE
-            animation.snapTo(0f)
+        if(categoriesVisibility && !subCategoriesVisibility){
+            scope.launch {
+                animationState = AnimationState.SCROLLING
+                animation.animateTo(
+                    targetValue = 1f,
+                    animationSpec = tween(durationMillis = 100, easing = LinearEasing)
+                )
+                categoriesVisibility = !categoriesVisibility
+                delay(300)
+                subCategoriesVisibility = !subCategoriesVisibility
+                animationState = AnimationState.IDLE
+                animation.snapTo(0f)
+                previousIndex = 0
+                currentIndex = 0
+                state.scrollToItem(0)
+            }
+        }else if( !categoriesVisibility && subCategoriesVisibility){
+            scope.launch {
+                animationState = AnimationState.SCROLLING
+                animation.animateTo(
+                    targetValue = 1f,
+                    animationSpec = tween(durationMillis = 100, easing = LinearEasing)
+                )
+                subCategoriesVisibility = !subCategoriesVisibility
+                delay(300)
+                categoriesVisibility = !categoriesVisibility
+                animationState = AnimationState.IDLE
+                animation.snapTo(0f)
+                previousIndex = 0
+                currentIndex = 0
+                state.scrollToItem(0)
+            }
         }
+
     }
 
 }
