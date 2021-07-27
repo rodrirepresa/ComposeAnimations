@@ -15,11 +15,11 @@ import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -65,7 +65,7 @@ fun BottomBar() {
 
     var e = with(LocalDensity.current) { 100.dp.toPx() }
 
-    Box(modifier = Modifier
+    /*Box(modifier = Modifier
         .fillMaxSize()
         .drawBehind { drawCircle(Color.Blue, 3f, Offset(e, e)) }) {
         Box(modifier = Modifier.padding(100.dp, 100.dp)) {
@@ -78,11 +78,13 @@ fun BottomBar() {
 
     }
 
+     */
+
     var state = rememberLazyListState()
 
     //Debug info
 
-    Column() {
+    /*Column() {
         Text(
             text = """" 
                 ${state.layoutInfo.viewportStartOffset}
@@ -97,7 +99,7 @@ fun BottomBar() {
         """.trimIndent()
             )
         }
-    }
+    }*/
 
     var contentPadding = with(LocalDensity.current) { 10.dp.toPx() }
     var scope = rememberCoroutineScope()
@@ -108,31 +110,43 @@ fun BottomBar() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(10.dp, 0.dp),
-        verticalArrangement = Arrangement.Center
+            .background(Color.White),
+        verticalArrangement = Arrangement.Bottom
     ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            elevation = 10.dp,
-            shape = RoundedCornerShape(30.dp)
 
+        Column(
+            modifier = Modifier
+                .wrapContentSize()
+                .padding(10.dp, 0.dp),
+            verticalArrangement = Arrangement.Bottom
         ) {
-            CategoriesRow(
-                state = state,
-                bottomBarState = bottomBarState,
-                items = items,
-                contentPadding = contentPadding
-            )
-            SubCategoryRow(
-                state = state,
-                bottomBarState = bottomBarState,
-                items = items2,
-                contentPadding = contentPadding
-            )
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                elevation = 10.dp,
+                shape = RoundedCornerShape(30.dp)
+
+            ) {
+                CategoriesRow(
+                    state = state,
+                    bottomBarState = bottomBarState,
+                    items = items,
+                    contentPadding = contentPadding
+                )
+                SubCategoryRow(
+                    state = state,
+                    bottomBarState = bottomBarState,
+                    items = items2,
+                    contentPadding = contentPadding
+                )
+            }
         }
+
+        FakeNavigationBar()
+
     }
+
 
 }
 
@@ -508,4 +522,53 @@ class BottomBarState(var scope: CoroutineScope) {
         }
     }
 
+}
+
+@Composable
+fun FakeNavigationBar() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp)
+            .padding(0.dp, 8.dp, 0.dp, 0.dp)
+            .background(Color.White)
+    ) {
+        for (i in 0..4) {
+            var (icon, title) =
+                when (i) {
+                    0 -> Pair(Icons.Outlined.Home, "Home")
+                    1 -> Pair(Icons.Outlined.Search, "Search")
+                    2 -> Pair(Icons.Outlined.FavoriteBorder, "Favourites")
+                    3 -> Pair(Icons.Outlined.Face, "My Account")
+                    4 -> Pair(Icons.Outlined.Settings, "Settings")
+                    else -> Pair(Icons.Outlined.Settings, "Settings")
+                }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = "",
+                    tint = if (i == 0) {
+                        Color.DarkGray
+                    } else {
+                        Color.LightGray
+                    }
+                )
+                Text(
+                    text = title,
+                    color = if (i == 0) {
+                        Color.DarkGray
+                    } else {
+                        Color.LightGray
+                    }
+                )
+            }
+        }
+
+    }
 }
