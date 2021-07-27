@@ -221,6 +221,8 @@ fun DrawIndicator(
         0f
     }
 
+    var height = with(LocalDensity.current) { 30.dp.toPx() }
+
     //As our Box() has a 10.dp padding, we need to rest this padding to show the indicator with the size of the text
     var sizeOffset = backArrowOffset + contentPadding
 
@@ -239,7 +241,7 @@ fun DrawIndicator(
                                 ) + (distance * animation.value),
                                 contentPadding
                             ),
-                            size = state.getSize(currentIndex, sizeOffset, contentPadding * 3),
+                            size = state.getSize(currentIndex, sizeOffset, height),
                             cornerRadius = CornerRadius(40f)
                         )
                     } ?: run {
@@ -266,7 +268,7 @@ fun DrawIndicator(
                         drawRoundRect(
                             color = Color.Blue,
                             topLeft = topLeft,
-                            size = state.getSize(currentIndex, contentPadding, contentPadding * 3),
+                            size = state.getSize(currentIndex, contentPadding, height),
                             cornerRadius = CornerRadius(40f)
                         )
                     }
@@ -280,7 +282,7 @@ fun DrawIndicator(
                             state.getTopLeftAxisX(currentIndex, contentPadding, backArrowOffset),
                             contentPadding
                         ),
-                        size = state.getSize(currentIndex, sizeOffset, contentPadding * 3),
+                        size = state.getSize(currentIndex, sizeOffset, height),
                         cornerRadius = CornerRadius(40f)
                     )
                 }
@@ -485,7 +487,7 @@ class BottomBarState(var scope: CoroutineScope) {
                 animationState = AnimationState.SCROLLING
                 animation.animateTo(
                     targetValue = 1f,
-                    animationSpec = tween(durationMillis = 100, easing = LinearEasing)
+                    animationSpec = tween(durationMillis = 200, easing = LinearEasing)
                 )
                 animationState = AnimationState.IDLE
                 animation.snapTo(0f)
