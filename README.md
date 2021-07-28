@@ -4,6 +4,10 @@ In this repo you will find a series of animations made with Jetpack Compose
 
 ## Current Animations
 
+ ⚡️ Bottom Bar
+ 
+ ![ezgif com-video-to-gif-11](https://user-images.githubusercontent.com/17813148/127306989-ae1b4b9e-a908-43ca-916d-98d6ff844542.gif)
+
 
 :page_facing_up: Indicators
 
