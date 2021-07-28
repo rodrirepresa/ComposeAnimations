@@ -1,13 +1,19 @@
 package com.represa.draw.ui
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.gestures.rememberScrollableState
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,6 +31,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -33,6 +40,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@ExperimentalFoundationApi
 @ExperimentalAnimationApi
 @Composable
 fun BottomBar() {
@@ -101,50 +109,133 @@ fun BottomBar() {
         }
     }*/
 
+    var navigationBarVisibility by remember { mutableStateOf(true) }
+    val density = LocalDensity.current
+    val listState = rememberLazyListState()
+    val context = LocalContext.current
+    var offset by remember { mutableStateOf(0f) }
+
     var contentPadding = with(LocalDensity.current) { 10.dp.toPx() }
     var scope = rememberCoroutineScope()
     var bottomBarState = remember {
         BottomBarState(scope)
     }
 
-    Column(
+    //Fake Background
+
+    Box(
         modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White),
-        verticalArrangement = Arrangement.Bottom
+            .fillMaxSize(),
+        contentAlignment = Alignment.BottomStart
     ) {
-
-        Column(
+        LazyVerticalGrid(
+            state = listState,
+            cells = GridCells.Fixed(2),
             modifier = Modifier
-                .wrapContentSize()
-                .padding(10.dp, 0.dp),
-            verticalArrangement = Arrangement.Bottom
+                .fillMaxSize(),
+            /*.scrollable(
+                orientation = Orientation.Vertical,
+                state = rememberScrollableState { delta ->
+                    Log.e("OFFSET BEFORE: ", offset.toString())
+                    Log.e("DELTA: ", delta.toString())
+                    offset+=delta
+                Log.e("OFFSET LATER: ", offset.toString())
+                    navigationBarVisibility = delta > 0
+                    delta
+            }
+            ),*/
+            contentPadding = PaddingValues(13.dp, 10.dp)
         ) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                elevation = 10.dp,
-                shape = RoundedCornerShape(30.dp)
+            items(50) { item ->
+                var padding = if (item % 2 == 0) {
+                    PaddingValues(0.dp, 0.dp, 3.dp, 6.dp)
+                } else {
+                    PaddingValues(3.dp, 0.dp, 3.dp, 6.dp)
+                }
+                var color = if (item % 2 == 0) {
+                    Color.Yellow
+                } else {
+                    Color.Cyan
+                }
+                Box(
+                    modifier = Modifier
+                        .height(190.dp)
+                        .padding(padding)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(color)
+                    ) {
 
-            ) {
-                CategoriesRow(
-                    state = state,
-                    bottomBarState = bottomBarState,
-                    items = items,
-                    contentPadding = contentPadding
-                )
-                SubCategoryRow(
-                    state = state,
-                    bottomBarState = bottomBarState,
-                    items = items2,
-                    contentPadding = contentPadding
-                )
+                    }
+                }
             }
         }
 
-        FakeNavigationBar()
 
+        //NavigationsBar
+
+        AnimatedVisibility(
+            visible = navigationBarVisibility,
+            enter = slideInVertically(
+                // Slide in from 40 dp from the top.
+                initialOffsetY = { with(density) { 40.dp.roundToPx() } },
+                animationSpec = tween(durationMillis = 100, easing = LinearEasing)
+            ) + fadeIn(
+                // Fade in with the initial alpha of 0.3f.
+                initialAlpha = 0.3f
+            ),
+            exit = slideOutVertically(
+                targetOffsetY = { with(density) { 40.dp.roundToPx() } },
+                animationSpec = tween(durationMillis = 100, easing = LinearEasing)
+
+            ) + fadeOut(
+                animationSpec = tween(durationMillis = 100, easing = LinearEasing)
+            )
+        ) {
+
+
+            Column(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .background(Color.Transparent),
+                verticalArrangement = Arrangement.Bottom
+            ) {
+
+                Column(
+                    modifier = Modifier
+                        .wrapContentSize()
+                        .padding(10.dp, 0.dp),
+                    verticalArrangement = Arrangement.Bottom
+                ) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        elevation = 10.dp,
+                        shape = RoundedCornerShape(30.dp),
+
+                        ) {
+                        CategoriesRow(
+                            state = state,
+                            bottomBarState = bottomBarState,
+                            items = items,
+                            contentPadding = contentPadding
+                        )
+                        SubCategoryRow(
+                            state = state,
+                            bottomBarState = bottomBarState,
+                            items = items2,
+                            contentPadding = contentPadding
+                        )
+                    }
+                }
+
+                FakeNavigationBar()
+
+            }
+        }
     }
 
 
