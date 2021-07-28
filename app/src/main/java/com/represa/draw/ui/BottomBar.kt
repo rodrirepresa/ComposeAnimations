@@ -1,7 +1,5 @@
 package com.represa.draw.ui
 
-import android.util.Log
-import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -10,10 +8,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.animateScrollBy
-import androidx.compose.foundation.gestures.rememberScrollableState
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,9 +26,9 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.represa.draw.extensions.safeLet
 import kotlinx.coroutines.CoroutineScope
@@ -57,7 +52,7 @@ fun BottomBar() {
         "PLUS SIZE"
     )
 
-    var items2 = listOf(
+    var subCategoryItems = listOf(
         "ALL CLOTHING",
         "SEASON HIGHLIGHT",
         "T-SHIRT",
@@ -69,91 +64,17 @@ fun BottomBar() {
         "SHORTS"
     )
 
-    //Experiment with Density and Offset
-
-    var e = with(LocalDensity.current) { 100.dp.toPx() }
-
-    /*Box(modifier = Modifier
-        .fillMaxSize()
-        .drawBehind { drawCircle(Color.Blue, 3f, Offset(e, e)) }) {
-        Box(modifier = Modifier.padding(100.dp, 100.dp)) {
-            Box(
-                modifier = Modifier
-                    .size(10.dp)
-                    .background(Color.Red)
-            )
-        }
-
-    }
-
-     */
-
-    var state = rememberLazyListState()
-
-    //Debug info
-
-    /*Column() {
-        Text(
-            text = """" 
-                ${state.layoutInfo.viewportStartOffset}
-                ${state.layoutInfo.viewportEndOffset}
-            """.trimMargin()
-        )
-
-        state.layoutInfo.visibleItemsInfo.forEach {
-            Text(
-                text = """
-            ${it.index} + "/" + "offsetStart: ${it.offset} + "/" + "size: ${it.size} + "///" + "offsetEnd: ${it.size + it.offset}
-        """.trimIndent()
-            )
-        }
-    }*/
-
-    var navigationBarVisibility by remember { mutableStateOf(true) }
-    val density = LocalDensity.current
     val listState = rememberLazyListState()
-    val context = LocalContext.current
-    var offset by remember { mutableStateOf(0) }
+    val gridListState = rememberLazyListState()
 
-    var first by remember { mutableStateOf(0) }
+    var navigationBarVisibility = remember { mutableStateOf(true) }
+    val density = LocalDensity.current
 
-
-
-    if (listState.isScrollInProgress) {
-        listState.layoutInfo.visibleItemsInfo.firstOrNull()?.let { firstItem ->
-            when {
-                firstItem.index > first -> {
-                    navigationBarVisibility = false
-                    offset = 0
-                }
-                firstItem.index < first -> {
-                    navigationBarVisibility = true
-                    offset = firstItem.offset
-                }
-                else -> {
-                    when {
-                        firstItem.offset < offset -> {
-                            navigationBarVisibility = false
-                        }
-                        firstItem.offset > offset -> {
-                            navigationBarVisibility = true
-                        }
-                    }
-                    offset = firstItem.offset
-                }
-            }
-            first = firstItem.index
-        }
-    }
-
-
-    var contentPadding = with(LocalDensity.current) { 10.dp.toPx() }
+    var contentPadding = with(density) { 10.dp.toPx() }
     var scope = rememberCoroutineScope()
     var bottomBarState = remember {
         BottomBarState(scope)
     }
-
-    //Fake Background
 
     Box(
         modifier = Modifier
@@ -161,41 +82,11 @@ fun BottomBar() {
             .background(Color(0xFFFCFCFF)),
         contentAlignment = Alignment.BottomStart
     ) {
-        LazyVerticalGrid(
-            state = listState,
-            cells = GridCells.Fixed(2),
-            modifier = Modifier
-                .fillMaxSize(),
-            contentPadding = PaddingValues(13.dp, 10.dp)
-        ) {
-            items(50) { item ->
-                var padding = if (item % 2 == 0) {
-                    PaddingValues(0.dp, 0.dp, 3.dp, 6.dp)
-                } else {
-                    PaddingValues(3.dp, 0.dp, 3.dp, 6.dp)
-                }
-                Box(
-                    modifier = Modifier
-                        .height(190.dp)
-                        .padding(padding)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color(0xFFeeeeee))
-                    ) {
 
-                    }
-                }
-            }
-
-        }
-
-
-        //NavigationsBar
+        Background(gridListState, navigationBarVisibility)
 
         AnimatedVisibility(
-            visible = navigationBarVisibility,
+            visible = navigationBarVisibility.value,
             enter = slideInVertically(
                 // Slide in from 40 dp from the top.
                 initialOffsetY = { with(density) { 40.dp.roundToPx() } },
@@ -213,59 +104,70 @@ fun BottomBar() {
             )
         ) {
 
+            AnimatedNavigationBar(
+                listState = listState,
+                bottomBarState = bottomBarState,
+                items = items,
+                subCategoryItems = subCategoryItems,
+                density = density,
+                contentPadding = contentPadding
+            )
 
-            Column(
-                modifier = Modifier
-                    .wrapContentSize()
-                    .background(Color.Transparent),
-                verticalArrangement = Arrangement.Bottom
-            ) {
-
-                Column(
-                    modifier = Modifier
-                        .wrapContentSize()
-                        .padding(10.dp, 0.dp),
-                    verticalArrangement = Arrangement.Bottom
-                ) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        elevation = 10.dp,
-                        shape = RoundedCornerShape(30.dp),
-
-                        ) {
-                        CategoriesRow(
-                            state = state,
-                            bottomBarState = bottomBarState,
-                            items = items,
-                            contentPadding = contentPadding
-                        )
-                        SubCategoryRow(
-                            state = state,
-                            bottomBarState = bottomBarState,
-                            items = items2,
-                            contentPadding = contentPadding
-                        )
-                    }
-                }
-
-                FakeNavigationBar()
-
-            }
         }
     }
+}
 
-    Text(
-        text = """
-        "First var: " $first
-        "Offset var: " $offset
-        "visibleItemsInfo.firstOrNull():" ${listState.layoutInfo.visibleItemsInfo.firstOrNull()?.index}
-        "First offset: " ${listState.layoutInfo.visibleItemsInfo.firstOrNull()?.offset}
-    """.trimIndent()
-    )
+@ExperimentalAnimationApi
+@Composable
+fun AnimatedNavigationBar(
+    listState: LazyListState,
+    bottomBarState: BottomBarState,
+    items: List<String>,
+    subCategoryItems: List<String>,
+    density: Density,
+    contentPadding: Float
+) {
+    Column(
+        modifier = Modifier
+            .wrapContentSize()
+            .background(Color.Transparent),
+        verticalArrangement = Arrangement.Bottom
+    ) {
 
+        Column(
+            modifier = Modifier
+                .wrapContentSize()
+                .padding(10.dp, 0.dp),
+            verticalArrangement = Arrangement.Bottom
+        ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                elevation = 10.dp,
+                shape = RoundedCornerShape(30.dp),
 
+                ) {
+                CategoriesRow(
+                    state = listState,
+                    bottomBarState = bottomBarState,
+                    items = items,
+                    contentPadding = contentPadding,
+                    density = density
+                )
+                SubCategoryRow(
+                    state = listState,
+                    bottomBarState = bottomBarState,
+                    items = subCategoryItems,
+                    contentPadding = contentPadding,
+                    density = density
+                )
+            }
+        }
+
+        FakeNavigationBar()
+
+    }
 }
 
 @ExperimentalAnimationApi
@@ -274,9 +176,9 @@ fun CategoriesRow(
     state: LazyListState,
     bottomBarState: BottomBarState,
     items: List<String>,
-    contentPadding: Float
+    contentPadding: Float,
+    density: Density
 ) {
-    val density = LocalDensity.current
 
     AnimatedVisibility(
         visible = bottomBarState.categoriesVisibility,
@@ -296,7 +198,7 @@ fun CategoriesRow(
         )
     ) {
 
-        DrawIndicator(state, bottomBarState, contentPadding, false)
+        DrawIndicator(state, bottomBarState, contentPadding, false, density)
         Categories(state, bottomBarState, items, false)
     }
 }
@@ -307,9 +209,9 @@ fun SubCategoryRow(
     state: LazyListState,
     bottomBarState: BottomBarState,
     items: List<String>,
-    contentPadding: Float
+    contentPadding: Float,
+    density: Density
 ) {
-    val density = LocalDensity.current
 
     AnimatedVisibility(
         visible = bottomBarState.subCategoriesVisibility,
@@ -330,7 +232,7 @@ fun SubCategoryRow(
         )
     ) {
 
-        DrawIndicator(state, bottomBarState, contentPadding, true)
+        DrawIndicator(state, bottomBarState, contentPadding, true, density)
         Categories(state, bottomBarState, items, true)
     }
 
@@ -344,16 +246,17 @@ fun DrawIndicator(
     state: LazyListState,
     bottomBarState: BottomBarState,
     contentPadding: Float,
-    subCategory: Boolean
+    subCategory: Boolean,
+    density: Density
 ) {
     //When we show the back arrow, we have to add this size to calculate properly the beggining Offset of our Box()
     var backArrowOffset = if (subCategory && bottomBarState.currentIndex == 0) {
-        with(LocalDensity.current) { 40.dp.toPx() }
+        with(density) { 40.dp.toPx() }
     } else {
         0f
     }
 
-    var height = with(LocalDensity.current) { 30.dp.toPx() }
+    var height = with(density) { 30.dp.toPx() }
 
     //As our Box() has a 10.dp padding, we need to rest this padding to show the indicator with the size of the text
     var sizeOffset = backArrowOffset + contentPadding
@@ -517,6 +420,45 @@ fun Categories(
 
 }
 
+@ExperimentalFoundationApi
+@Composable
+fun Background(gridListState: LazyListState, navigationBarVisibility: MutableState<Boolean>) {
+
+    var offset = remember { mutableStateOf(0) }
+    var first = remember { mutableStateOf(0) }
+    gridListState.setScrollBehaviour(first, offset, navigationBarVisibility)
+
+    LazyVerticalGrid(
+        state = gridListState,
+        cells = GridCells.Fixed(2),
+        modifier = Modifier
+            .fillMaxSize(),
+        contentPadding = PaddingValues(13.dp, 10.dp)
+    ) {
+        items(50) { item ->
+            var padding = if (item % 2 == 0) {
+                PaddingValues(0.dp, 0.dp, 3.dp, 6.dp)
+            } else {
+                PaddingValues(3.dp, 0.dp, 3.dp, 6.dp)
+            }
+            Box(
+                modifier = Modifier
+                    .height(190.dp)
+                    .padding(padding)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFFeeeeee))
+                ) {
+
+                }
+            }
+        }
+
+    }
+}
+
 private fun LazyListState.toScroll(
     index: Int,
     positionFromMiddle: Position,
@@ -578,6 +520,39 @@ private fun LazyListState.getSize(index: Int, contentPadding: Float, height: Flo
     }
 }
 
+private fun LazyListState.setScrollBehaviour(
+    first: MutableState<Int>,
+    offset: MutableState<Int>,
+    navigationBarVisibility: MutableState<Boolean>
+) {
+    if (isScrollInProgress) {
+        layoutInfo.visibleItemsInfo.firstOrNull()?.let { firstItem ->
+            when {
+                firstItem.index > first.value -> {
+                    navigationBarVisibility.value = false
+                    offset.value = 0
+                }
+                firstItem.index < first.value -> {
+                    navigationBarVisibility.value = true
+                    offset.value = firstItem.offset
+                }
+                else -> {
+                    when {
+                        firstItem.offset < offset.value -> {
+                            navigationBarVisibility.value = false
+                        }
+                        firstItem.offset > offset.value -> {
+                            navigationBarVisibility.value = true
+                        }
+                    }
+                    offset.value = firstItem.offset
+                }
+            }
+            first.value = firstItem.index
+        }
+    }
+}
+
 enum class Position {
     RIGHT,
     LEFT,
@@ -608,7 +583,7 @@ class BottomBarState(var scope: CoroutineScope) {
                 animationState = AnimationState.SCROLLING
                 animation.animateTo(
                     targetValue = 1f,
-                    animationSpec = tween(durationMillis = 200, easing = LinearEasing)
+                    animationSpec = tween(durationMillis = 150, easing = LinearEasing)
                 )
                 categoriesVisibility = !categoriesVisibility
                 delay(350)
@@ -624,7 +599,7 @@ class BottomBarState(var scope: CoroutineScope) {
                 animationState = AnimationState.SCROLLING
                 animation.animateTo(
                     targetValue = 1f,
-                    animationSpec = tween(durationMillis = 200, easing = LinearEasing)
+                    animationSpec = tween(durationMillis = 150, easing = LinearEasing)
                 )
                 animationState = AnimationState.IDLE
                 animation.snapTo(0f)
