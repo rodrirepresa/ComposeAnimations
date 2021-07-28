@@ -305,10 +305,12 @@ fun DrawIndicator(
 
     var height = with(density) { 30.dp.toPx() }
 
-    //As our Box() has a 10.dp padding, we need to rest this padding to show the indicator with the size of the text
-    var sizeOffset = if(subCategory){
+    //We have to rest the start margin
+    // subCategory -> 20.dp - 15.dp = 5.dp
+    //else 10.dp
+    var sizeOffset = if (subCategory) {
         with(density) { 5.dp.toPx() }
-    }else{
+    } else {
         contentPadding
     }
 
@@ -329,8 +331,8 @@ fun DrawIndicator(
                                 topLeft = Offset(
                                     state.getTopLeftAxisX(
                                         previousIndex,
-                                        contentPadding,
-                                        backArrowOffset
+                                        sizeOffset,
+                                        0f
                                     ) + (distance * animation.value),
                                     contentPadding
                                 ),
@@ -345,7 +347,7 @@ fun DrawIndicator(
                                 currentIndex > previousIndex -> {
                                     Offset(
                                         (to!!
-                                            .offset + contentPadding) * animation.value,
+                                            .offset + sizeOffset ) * animation.value,
                                         contentPadding
                                     )
                                 }
@@ -375,7 +377,8 @@ fun DrawIndicator(
                             topLeft = Offset(
                                 state.getTopLeftAxisX(
                                     currentIndex,
-                                contentPadding = sizeOffset),
+                                    contentPadding = sizeOffset
+                                ),
                                 contentPadding
                             ),
                             size = state.getSize(currentIndex, contentPadding, height),
@@ -556,7 +559,11 @@ private fun LazyListState.getDistance(from: Int, to: Int): Int? {
     }
 }
 
-private fun LazyListState.getSize(index: Int, contentPadding: Float = 0f, height: Float = 0f): Size {
+private fun LazyListState.getSize(
+    index: Int,
+    contentPadding: Float = 0f,
+    height: Float = 0f
+): Size {
     var item = getItem(index)
     item?.let {
         return Size(item.size.toFloat() - contentPadding, height)
