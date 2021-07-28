@@ -113,7 +113,39 @@ fun BottomBar() {
     val density = LocalDensity.current
     val listState = rememberLazyListState()
     val context = LocalContext.current
-    var offset by remember { mutableStateOf(0f) }
+    var offset by remember { mutableStateOf(0) }
+
+    var first by remember { mutableStateOf(0) }
+
+
+
+    if (listState.isScrollInProgress) {
+        listState.layoutInfo.visibleItemsInfo.firstOrNull()?.let { firstItem ->
+            when {
+                firstItem.index > first -> {
+                    navigationBarVisibility = false
+                    offset = 0
+                }
+                firstItem.index < first -> {
+                    navigationBarVisibility = true
+                    offset = firstItem.offset
+                }
+                else -> {
+                    when {
+                        firstItem.offset < offset -> {
+                            navigationBarVisibility = false
+                        }
+                        firstItem.offset > offset -> {
+                            navigationBarVisibility = true
+                        }
+                    }
+                    offset = firstItem.offset
+                }
+            }
+            first = firstItem.index
+        }
+    }
+
 
     var contentPadding = with(LocalDensity.current) { 10.dp.toPx() }
     var scope = rememberCoroutineScope()
@@ -125,7 +157,8 @@ fun BottomBar() {
 
     Box(
         modifier = Modifier
-            .fillMaxSize(),
+            .fillMaxSize()
+            .background(Color(0xFFFCFCFF)),
         contentAlignment = Alignment.BottomStart
     ) {
         LazyVerticalGrid(
@@ -133,17 +166,6 @@ fun BottomBar() {
             cells = GridCells.Fixed(2),
             modifier = Modifier
                 .fillMaxSize(),
-            /*.scrollable(
-                orientation = Orientation.Vertical,
-                state = rememberScrollableState { delta ->
-                    Log.e("OFFSET BEFORE: ", offset.toString())
-                    Log.e("DELTA: ", delta.toString())
-                    offset+=delta
-                Log.e("OFFSET LATER: ", offset.toString())
-                    navigationBarVisibility = delta > 0
-                    delta
-            }
-            ),*/
             contentPadding = PaddingValues(13.dp, 10.dp)
         ) {
             items(50) { item ->
@@ -151,11 +173,6 @@ fun BottomBar() {
                     PaddingValues(0.dp, 0.dp, 3.dp, 6.dp)
                 } else {
                     PaddingValues(3.dp, 0.dp, 3.dp, 6.dp)
-                }
-                var color = if (item % 2 == 0) {
-                    Color.Yellow
-                } else {
-                    Color.Cyan
                 }
                 Box(
                     modifier = Modifier
@@ -165,12 +182,13 @@ fun BottomBar() {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(color)
+                            .background(Color(0xFFeeeeee))
                     ) {
 
                     }
                 }
             }
+
         }
 
 
@@ -237,6 +255,15 @@ fun BottomBar() {
             }
         }
     }
+
+    Text(
+        text = """
+        "First var: " $first
+        "Offset var: " $offset
+        "visibleItemsInfo.firstOrNull():" ${listState.layoutInfo.visibleItemsInfo.firstOrNull()?.index}
+        "First offset: " ${listState.layoutInfo.visibleItemsInfo.firstOrNull()?.offset}
+    """.trimIndent()
+    )
 
 
 }
@@ -357,7 +384,8 @@ fun DrawIndicator(
                             currentIndex > previousIndex -> {
                                 Offset(
                                     (to!!
-                                        .offset + contentPadding) * animation.value, contentPadding
+                                        .offset + contentPadding) * animation.value,
+                                    contentPadding
                                 )
                             }
                             currentIndex < previousIndex -> {
@@ -384,7 +412,11 @@ fun DrawIndicator(
                     drawRoundRect(
                         color = Color.Blue,
                         topLeft = Offset(
-                            state.getTopLeftAxisX(currentIndex, contentPadding, backArrowOffset),
+                            state.getTopLeftAxisX(
+                                currentIndex,
+                                contentPadding,
+                                backArrowOffset
+                            ),
                             contentPadding
                         ),
                         size = state.getSize(currentIndex, sizeOffset, height),
