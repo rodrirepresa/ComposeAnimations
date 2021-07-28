@@ -26,6 +26,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
@@ -76,6 +77,9 @@ fun BottomBar() {
         BottomBarState(scope)
     }
 
+    //Debug info
+
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -115,6 +119,23 @@ fun BottomBar() {
 
         }
     }
+
+    Column() {
+        Text(
+            text = """" 
+                ${listState.layoutInfo.viewportStartOffset}
+                ${listState.layoutInfo.viewportEndOffset}
+            """.trimMargin()
+        )
+
+        listState.layoutInfo.visibleItemsInfo.forEach {
+            Text(
+                text = """
+            ${it.index} + "/" + "offsetStart: ${it.offset} + "/" + "size: ${it.size} + "///" + "offsetEnd: ${it.size + it.offset}
+        """.trimIndent()
+            )
+        }
+    }
 }
 
 @ExperimentalAnimationApi
@@ -148,20 +169,22 @@ fun AnimatedNavigationBar(
                 shape = RoundedCornerShape(30.dp),
 
                 ) {
-                CategoriesRow(
-                    state = listState,
-                    bottomBarState = bottomBarState,
-                    items = items,
-                    contentPadding = contentPadding,
-                    density = density
-                )
-                SubCategoryRow(
-                    state = listState,
-                    bottomBarState = bottomBarState,
-                    items = subCategoryItems,
-                    contentPadding = contentPadding,
-                    density = density
-                )
+                Box(modifier = Modifier.fillMaxSize()) {
+                    CategoriesRow(
+                        state = listState,
+                        bottomBarState = bottomBarState,
+                        items = items,
+                        contentPadding = contentPadding,
+                        density = density
+                    )
+                    SubCategoryRow(
+                        state = listState,
+                        bottomBarState = bottomBarState,
+                        items = subCategoryItems,
+                        contentPadding = contentPadding,
+                        density = density
+                    )
+                }
             }
         }
 
@@ -232,8 +255,32 @@ fun SubCategoryRow(
         )
     ) {
 
-        DrawIndicator(state, bottomBarState, contentPadding, true, density)
-        Categories(state, bottomBarState, items, true)
+
+        Box() {
+            DrawIndicator(state, bottomBarState, contentPadding, true, density)
+            Categories(state, bottomBarState, items, true)
+        }
+
+        Box(modifier = Modifier.wrapContentSize()) {
+            Card(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(40.dp)
+                    .padding(10.dp, 10.dp, 0.dp, 10.dp),
+                elevation = 5.dp,
+                shape = RoundedCornerShape(30.dp),
+                backgroundColor = Color.LightGray,
+            ) {
+                Icon(imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "",
+                    modifier = Modifier
+                        .scale(0.6f)
+                        .clickable {
+                            bottomBarState.reset(state)
+                        })
+            }
+        }
+
     }
 
 }
@@ -250,7 +297,7 @@ fun DrawIndicator(
     density: Density
 ) {
     //When we show the back arrow, we have to add this size to calculate properly the beggining Offset of our Box()
-    var backArrowOffset = if (subCategory && bottomBarState.currentIndex == 0) {
+    var backArrowOffset = if (subCategory) {
         with(density) { 40.dp.toPx() }
     } else {
         0f
@@ -259,72 +306,82 @@ fun DrawIndicator(
     var height = with(density) { 30.dp.toPx() }
 
     //As our Box() has a 10.dp padding, we need to rest this padding to show the indicator with the size of the text
-    var sizeOffset = backArrowOffset + contentPadding
+    var sizeOffset = if(subCategory){
+        with(density) { 5.dp.toPx() }
+    }else{
+        contentPadding
+    }
+
+    var center = if (subCategory) {
+        Offset(with(density) { 40.dp.toPx() }, 0f)
+    } else {
+        Offset(with(density) { 0.dp.toPx() }, 0f)
+    }
 
     Canvas(modifier = Modifier) {
-        when (bottomBarState.animationState) {
-            AnimationState.SCROLLING -> {
-                with(bottomBarState) {
-                    state.getDistance(previousIndex, currentIndex)?.let { distance ->
+        translate(center.x, center.y) {
+            when (bottomBarState.animationState) {
+                AnimationState.SCROLLING -> {
+                    with(bottomBarState) {
+                        state.getDistance(previousIndex, currentIndex)?.let { distance ->
+                            drawRoundRect(
+                                color = Color.Blue,
+                                topLeft = Offset(
+                                    state.getTopLeftAxisX(
+                                        previousIndex,
+                                        contentPadding,
+                                        backArrowOffset
+                                    ) + (distance * animation.value),
+                                    contentPadding
+                                ),
+                                size = state.getSize(currentIndex, sizeOffset, height),
+                                cornerRadius = CornerRadius(40f)
+                            )
+                        } ?: run {
+
+                            var to = state.getItem(currentIndex)
+
+                            var topLeft = when {
+                                currentIndex > previousIndex -> {
+                                    Offset(
+                                        (to!!
+                                            .offset + contentPadding) * animation.value,
+                                        contentPadding
+                                    )
+                                }
+                                currentIndex < previousIndex -> {
+                                    Offset(
+                                        state.layoutInfo.viewportEndOffset - (state.layoutInfo.viewportEndOffset - to!!.offset - contentPadding) * (animation.value) + backArrowOffset,
+                                        contentPadding
+                                    )
+                                }
+                                else -> {
+                                    Offset(to!!.offset.toFloat(), contentPadding)
+                                }
+                            }
+                            drawRoundRect(
+                                color = Color.Blue,
+                                topLeft = topLeft,
+                                size = state.getSize(currentIndex, contentPadding, height),
+                                cornerRadius = CornerRadius(40f)
+                            )
+                        }
+                    }
+                }
+                AnimationState.IDLE -> {
+                    with(bottomBarState) {
                         drawRoundRect(
                             color = Color.Blue,
                             topLeft = Offset(
                                 state.getTopLeftAxisX(
-                                    previousIndex,
-                                    contentPadding,
-                                    backArrowOffset
-                                ) + (distance * animation.value),
+                                    currentIndex,
+                                contentPadding = sizeOffset),
                                 contentPadding
                             ),
-                            size = state.getSize(currentIndex, sizeOffset, height),
-                            cornerRadius = CornerRadius(40f)
-                        )
-                    } ?: run {
-
-                        var to = state.getItem(currentIndex)
-
-                        var topLeft = when {
-                            currentIndex > previousIndex -> {
-                                Offset(
-                                    (to!!
-                                        .offset + contentPadding) * animation.value,
-                                    contentPadding
-                                )
-                            }
-                            currentIndex < previousIndex -> {
-                                Offset(
-                                    state.layoutInfo.viewportEndOffset - (state.layoutInfo.viewportEndOffset - to!!.offset - contentPadding) * (animation.value) + backArrowOffset,
-                                    contentPadding
-                                )
-                            }
-                            else -> {
-                                Offset(to!!.offset.toFloat(), contentPadding)
-                            }
-                        }
-                        drawRoundRect(
-                            color = Color.Blue,
-                            topLeft = topLeft,
                             size = state.getSize(currentIndex, contentPadding, height),
                             cornerRadius = CornerRadius(40f)
                         )
                     }
-                }
-            }
-            AnimationState.IDLE -> {
-                with(bottomBarState) {
-                    drawRoundRect(
-                        color = Color.Blue,
-                        topLeft = Offset(
-                            state.getTopLeftAxisX(
-                                currentIndex,
-                                contentPadding,
-                                backArrowOffset
-                            ),
-                            contentPadding
-                        ),
-                        size = state.getSize(currentIndex, sizeOffset, height),
-                        cornerRadius = CornerRadius(40f)
-                    )
                 }
             }
         }
@@ -341,35 +398,23 @@ fun Categories(
 ) {
 
     var scope = rememberCoroutineScope()
+    var padding = if (subCategory) {
+        PaddingValues(25.dp, 0.dp, 0.dp, 0.dp)
+    } else {
+        PaddingValues(0.dp, 0.dp)
+    }
+    var paddingValues = if (subCategory) {
+        PaddingValues(20.dp, 0.dp)
+    } else {
+        PaddingValues(10.dp, 0.dp)
+    }
 
     LazyRow(
-        modifier = Modifier,
-        contentPadding = PaddingValues(10.dp, 0.dp),
+        modifier = Modifier.padding(padding),
+        contentPadding = paddingValues,
         state = state
     ) {
         itemsIndexed(items) { index, item ->
-
-
-            if (subCategory && index == 0) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width(40.dp)
-                        .padding(0.dp, 10.dp, 10.dp, 10.dp),
-                    elevation = 5.dp,
-                    shape = RoundedCornerShape(30.dp),
-                    backgroundColor = Color.LightGray,
-                ) {
-                    Icon(imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "",
-                        modifier = Modifier
-                            .scale(0.6f)
-                            .clickable {
-                                bottomBarState.reset(state)
-                            })
-                }
-            }
-
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
@@ -490,7 +535,7 @@ private fun LazyListState.getItem(index: Int): LazyListItemInfo? {
 
 private fun LazyListState.getTopLeftAxisX(
     index: Int,
-    contentPadding: Float,
+    contentPadding: Float = 0f,
     backArrowOffset: Float = 0f
 ): Float {
     var item = getItem(index)
@@ -511,7 +556,7 @@ private fun LazyListState.getDistance(from: Int, to: Int): Int? {
     }
 }
 
-private fun LazyListState.getSize(index: Int, contentPadding: Float, height: Float): Size {
+private fun LazyListState.getSize(index: Int, contentPadding: Float = 0f, height: Float = 0f): Size {
     var item = getItem(index)
     item?.let {
         return Size(item.size.toFloat() - contentPadding, height)
