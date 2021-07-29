@@ -6,7 +6,7 @@ In this repo you will find a series of animations made with Jetpack Compose
 
  ⚡️ Bottom Bar
  
- ![ezgif com-video-to-gif-11](https://user-images.githubusercontent.com/17813148/127306989-ae1b4b9e-a908-43ca-916d-98d6ff844542.gif)
+![ezgif com-video-to-gif-12](https://user-images.githubusercontent.com/17813148/127470732-22a237bd-2bd0-40a4-b4e9-1f4ab4b458f4.gif)
 
 
 :page_facing_up: Indicators
