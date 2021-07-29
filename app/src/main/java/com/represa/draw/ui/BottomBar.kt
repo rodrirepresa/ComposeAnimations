@@ -239,6 +239,12 @@ fun SubCategoryRow(
         }
 
         Box(modifier = Modifier.wrapContentSize()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(25.dp)
+                    .background(Color.White)
+            )
             Card(
                 modifier = Modifier
                     .fillMaxHeight()
@@ -283,6 +289,7 @@ fun DrawIndicator(
     }
 
     var height = with(density) { 30.dp.toPx() }
+    var paddingBetweenObjects = with(density) { 10.dp.roundToPx().toFloat() }
 
     //In order to get the proper offset from the item
     //We have to add to the item.offset the contentPadding of the LazyRow in the axisX
@@ -315,7 +322,7 @@ fun DrawIndicator(
                                     ) + (distance * animation.value),
                                     contentPaddingY
                                 ),
-                                size = state.getSize(currentIndex, contentPaddingX, height),
+                                size = state.getSize(currentIndex, paddingBetweenObjects, height),
                                 cornerRadius = CornerRadius(40f)
                             )
                         } ?: run {
@@ -343,7 +350,7 @@ fun DrawIndicator(
                             drawRoundRect(
                                 color = Color.Blue,
                                 topLeft = topLeft,
-                                size = state.getSize(currentIndex, contentPaddingY, height),
+                                size = state.getSize(currentIndex, paddingBetweenObjects, height),
                                 cornerRadius = CornerRadius(40f)
                             )
                         }
@@ -351,6 +358,7 @@ fun DrawIndicator(
                 }
                 AnimationState.IDLE -> {
                     with(bottomBarState) {
+                        //if(subCategory && )
                         drawRoundRect(
                             color = Color.Blue,
                             topLeft = Offset(
@@ -360,7 +368,7 @@ fun DrawIndicator(
                                 ),
                                 contentPaddingY
                             ),
-                            size = state.getSize(currentIndex, contentPaddingY, height),
+                            size = state.getSize(currentIndex, paddingBetweenObjects, height),
                             cornerRadius = CornerRadius(40f)
                         )
                     }
@@ -515,11 +523,11 @@ private fun LazyListState.getItem(index: Int): LazyListItemInfo? {
 
 private fun LazyListState.getTopLeftAxisX(
     index: Int,
-    contentPadding: Float = 0f,
+    contentPaddingX: Float = 0f
 ): Float {
     var item = getItem(index)
     item?.let {
-        return item.offset.toFloat() + contentPadding
+        return item.offset.toFloat() + contentPaddingX
     } ?: run {
         return 0f
     }
