@@ -71,14 +71,11 @@ fun BottomBar() {
     var navigationBarVisibility = remember { mutableStateOf(true) }
     val density = LocalDensity.current
 
-    var contentPadding = with(density) { 10.dp.toPx() }
+    var contentPaddingY = with(density) { 10.dp.toPx() }
     var scope = rememberCoroutineScope()
     var bottomBarState = remember {
         BottomBarState(scope)
     }
-
-    //Debug info
-
 
     Box(
         modifier = Modifier
@@ -107,32 +104,13 @@ fun BottomBar() {
                 animationSpec = tween(durationMillis = 100, easing = LinearEasing)
             )
         ) {
-
             AnimatedNavigationBar(
                 listState = listState,
                 bottomBarState = bottomBarState,
                 items = items,
                 subCategoryItems = subCategoryItems,
                 density = density,
-                contentPadding = contentPadding
-            )
-
-        }
-    }
-
-    Column() {
-        Text(
-            text = """" 
-                ${listState.layoutInfo.viewportStartOffset}
-                ${listState.layoutInfo.viewportEndOffset}
-            """.trimMargin()
-        )
-
-        listState.layoutInfo.visibleItemsInfo.forEach {
-            Text(
-                text = """
-            ${it.index} + "/" + "offsetStart: ${it.offset} + "/" + "size: ${it.size} + "///" + "offsetEnd: ${it.size + it.offset}
-        """.trimIndent()
+                contentPaddingY = contentPaddingY
             )
         }
     }
@@ -146,7 +124,7 @@ fun AnimatedNavigationBar(
     items: List<String>,
     subCategoryItems: List<String>,
     density: Density,
-    contentPadding: Float
+    contentPaddingY: Float
 ) {
     Column(
         modifier = Modifier
@@ -174,14 +152,14 @@ fun AnimatedNavigationBar(
                         state = listState,
                         bottomBarState = bottomBarState,
                         items = items,
-                        contentPadding = contentPadding,
+                        contentPaddingY = contentPaddingY,
                         density = density
                     )
                     SubCategoryRow(
                         state = listState,
                         bottomBarState = bottomBarState,
                         items = subCategoryItems,
-                        contentPadding = contentPadding,
+                        contentPaddingY = contentPaddingY,
                         density = density
                     )
                 }
@@ -199,7 +177,7 @@ fun CategoriesRow(
     state: LazyListState,
     bottomBarState: BottomBarState,
     items: List<String>,
-    contentPadding: Float,
+    contentPaddingY: Float,
     density: Density
 ) {
 
@@ -221,7 +199,7 @@ fun CategoriesRow(
         )
     ) {
 
-        DrawIndicator(state, bottomBarState, contentPadding, false, density)
+        DrawIndicator(state, bottomBarState, contentPaddingY, false, density)
         Categories(state, bottomBarState, items, false)
     }
 }
@@ -232,7 +210,7 @@ fun SubCategoryRow(
     state: LazyListState,
     bottomBarState: BottomBarState,
     items: List<String>,
-    contentPadding: Float,
+    contentPaddingY: Float,
     density: Density
 ) {
 
@@ -255,9 +233,8 @@ fun SubCategoryRow(
         )
     ) {
 
-
         Box() {
-            DrawIndicator(state, bottomBarState, contentPadding, true, density)
+            DrawIndicator(state, bottomBarState, contentPaddingY, true, density)
             Categories(state, bottomBarState, items, true)
         }
 
@@ -277,7 +254,8 @@ fun SubCategoryRow(
                         .scale(0.6f)
                         .clickable {
                             bottomBarState.reset(state)
-                        })
+                        }
+                )
             }
         }
 
@@ -292,11 +270,12 @@ fun SubCategoryRow(
 fun DrawIndicator(
     state: LazyListState,
     bottomBarState: BottomBarState,
-    contentPadding: Float,
+    contentPaddingY: Float,
     subCategory: Boolean,
     density: Density
 ) {
-    //When we show the back arrow, we have to add this size to calculate properly the beggining Offset of our Box()
+    //When we show the back arrow, we have to count the arrow size in order to show properly the
+    //items from the correct start (The bac arrow view is 40.dp)
     var backArrowOffset = if (subCategory) {
         with(density) { 40.dp.toPx() }
     } else {
@@ -305,17 +284,18 @@ fun DrawIndicator(
 
     var height = with(density) { 30.dp.toPx() }
 
-    //We have to rest the start margin
-    // subCategory -> 20.dp - 15.dp = 5.dp
-    //else 10.dp
-    var sizeOffset = if (subCategory) {
-        with(density) { 5.dp.toPx() }
+    //In order to get the proper offset from the item
+    //We have to add to the item.offset the contentPadding of the LazyRow in the axisX
+    var contentPaddingX = if (subCategory) {
+        with(density) { 20.dp.toPx() }
     } else {
-        contentPadding
+        with(density) { 10.dp.toPx() }
     }
 
+    //Offset to move the Canvas center (0,0) to there
+    // (25,0) -> half of the icon
     var center = if (subCategory) {
-        Offset(with(density) { 40.dp.toPx() }, 0f)
+        Offset(with(density) { 25.dp.toPx() }, 0f)
     } else {
         Offset(with(density) { 0.dp.toPx() }, 0f)
     }
@@ -331,12 +311,11 @@ fun DrawIndicator(
                                 topLeft = Offset(
                                     state.getTopLeftAxisX(
                                         previousIndex,
-                                        sizeOffset,
-                                        0f
+                                        contentPaddingX
                                     ) + (distance * animation.value),
-                                    contentPadding
+                                    contentPaddingY
                                 ),
-                                size = state.getSize(currentIndex, sizeOffset, height),
+                                size = state.getSize(currentIndex, contentPaddingX, height),
                                 cornerRadius = CornerRadius(40f)
                             )
                         } ?: run {
@@ -347,24 +326,24 @@ fun DrawIndicator(
                                 currentIndex > previousIndex -> {
                                     Offset(
                                         (to!!
-                                            .offset + sizeOffset ) * animation.value,
-                                        contentPadding
+                                            .offset + contentPaddingX) * animation.value,
+                                        contentPaddingY
                                     )
                                 }
                                 currentIndex < previousIndex -> {
                                     Offset(
-                                        state.layoutInfo.viewportEndOffset - (state.layoutInfo.viewportEndOffset - to!!.offset - contentPadding) * (animation.value) + backArrowOffset,
-                                        contentPadding
+                                        state.layoutInfo.viewportEndOffset - (state.layoutInfo.viewportEndOffset - to!!.offset - contentPaddingY) * (animation.value) + backArrowOffset,
+                                        contentPaddingY
                                     )
                                 }
                                 else -> {
-                                    Offset(to!!.offset.toFloat(), contentPadding)
+                                    Offset(to!!.offset.toFloat(), contentPaddingY)
                                 }
                             }
                             drawRoundRect(
                                 color = Color.Blue,
                                 topLeft = topLeft,
-                                size = state.getSize(currentIndex, contentPadding, height),
+                                size = state.getSize(currentIndex, contentPaddingY, height),
                                 cornerRadius = CornerRadius(40f)
                             )
                         }
@@ -377,11 +356,11 @@ fun DrawIndicator(
                             topLeft = Offset(
                                 state.getTopLeftAxisX(
                                     currentIndex,
-                                    contentPadding = sizeOffset
+                                    contentPaddingX
                                 ),
-                                contentPadding
+                                contentPaddingY
                             ),
-                            size = state.getSize(currentIndex, contentPadding, height),
+                            size = state.getSize(currentIndex, contentPaddingY, height),
                             cornerRadius = CornerRadius(40f)
                         )
                     }
@@ -423,9 +402,7 @@ fun Categories(
                     .fillMaxHeight()
                     .wrapContentWidth()
                     .padding(0.dp, 0.dp, 10.dp, 0.dp)
-                    //.background(Color.Yellow)
                     .clickable {
-                        //bottomBarState.currentIndex = index
                         state
                             .getItem(index)
                             ?.let { item ->
@@ -539,11 +516,10 @@ private fun LazyListState.getItem(index: Int): LazyListItemInfo? {
 private fun LazyListState.getTopLeftAxisX(
     index: Int,
     contentPadding: Float = 0f,
-    backArrowOffset: Float = 0f
 ): Float {
     var item = getItem(index)
     item?.let {
-        return item.offset.toFloat() + contentPadding + backArrowOffset
+        return item.offset.toFloat() + contentPadding
     } ?: run {
         return 0f
     }
