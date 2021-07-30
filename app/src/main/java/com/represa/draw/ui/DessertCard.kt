@@ -13,7 +13,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.accompanist.coil.rememberCoilPainter
+import coil.compose.rememberImagePainter
 import com.represa.draw.data.Dessert
 
 @Composable
@@ -28,9 +28,8 @@ fun DessertCard(dessert: Dessert) {
     ) {
         Column {
             Image(
-                painter = rememberCoilPainter(
-                    dessert.url,
-                    fadeIn = true
+                painter = rememberImagePainter(
+                    data = dessert.url
                 ),
                 contentDescription = "f",
                 contentScale = ContentScale.FillBounds,
