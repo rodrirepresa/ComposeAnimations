@@ -51,8 +51,9 @@ fun IndicatorsContainer(pagerState: PagerState) {
                 verticalAlignment = Alignment.Bottom
             ) {
                 for (i in 0 until itemCount) {
+                    val weight = if (i == pagerState.currentPage) 1.4532f else 1f
                     SimpleIndicator(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(calculateWeight(pagerState = pagerState, position = i)),
                         color = color,
                         alpha = calculateAlpha(pagerState = pagerState, position = i),
                         height = calculateHeight(pagerState = pagerState, position = i),
@@ -61,6 +62,19 @@ fun IndicatorsContainer(pagerState: PagerState) {
                 }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalPagerApi::class)
+private fun calculateWeight(pagerState: PagerState, position: Int): Float {
+    with(pagerState) {
+        targetPage?.let {
+            return when (position) {
+                currentPage -> (2f * (1 - currentPageOffset.notOvertaking(1f))).notLower(1f)
+                targetPage -> 1f + (1f * currentPageOffset.notOvertaking(1f))
+                else -> 1f
+            }
+        } ?: return if (position == currentPage) 2f else 1f
     }
 }
 
@@ -112,10 +126,10 @@ private fun calculateHeight(
     with(pagerState) {
         targetPage?.let { targetPage ->
             return when (position) {
-                currentPage -> return (maxHeight * (1 - currentPageOffset.notOvertaking(1f))).notOvertaking(
+                currentPage -> (maxHeight * (1 - currentPageOffset.notOvertaking(1f))).notLower(
                     minHeight
                 )
-                targetPage -> return (maxHeight * currentPageOffset.notOvertaking(1f)).notOvertaking(
+                targetPage -> (maxHeight * currentPageOffset.notOvertaking(1f)).notLower(
                     minHeight
                 )
                 else -> minHeight
@@ -128,8 +142,12 @@ fun Float.notOvertaking(maxValue: Float): Float {
     return this.absoluteValue.takeIf { it < maxValue } ?: maxValue
 }
 
-fun Dp.notOvertaking(minValue: Dp): Dp {
-    return this.takeIf { it > minValue } ?: minValue
+fun Float.notLower(lowerValue: Float): Float {
+    return this.takeIf { it > lowerValue } ?: lowerValue
+}
+
+fun Dp.notLower(lowerValue: Dp): Dp {
+    return this.takeIf { it > lowerValue } ?: lowerValue
 }
 
 @OptIn(ExperimentalPagerApi::class)
@@ -146,7 +164,7 @@ fun Background(pagerState: PagerState) {
             contentAlignment = Alignment.BottomCenter
         ) {
             Button(
-                onClick = { /*TODO*/ },
+                onClick = {  },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(10.dp),
@@ -166,6 +184,6 @@ object IndicatorValue {
     val minHeight = 1.dp
     val paddingContainer = 14.dp
     val heightContainer = 20.dp
-    const val itemCount = 5
+    var itemCount = 4
     val paddingBetweenItems = 4.dp
 }
