@@ -22,10 +22,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.represa.draw.ui.BottomBar
-import com.represa.draw.ui.DatePicker
-import com.represa.draw.ui.RoundIndicators
-import com.represa.draw.ui.SplashScreen
+import com.represa.draw.ui.*
 
 class MainActivity : ComponentActivity() {
     @ExperimentalAnimationApi
@@ -71,7 +68,10 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun Buttons(navController: NavController) {
-        var modifier = Modifier.padding(0.dp, 20.dp)
+
+        AdidasPageIndicator()
+
+        /*var modifier = Modifier.padding(0.dp, 20.dp)
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -96,7 +96,7 @@ class MainActivity : ComponentActivity() {
             Button(onClick = { navController.navigate("trippyChest") }, modifier = modifier) {
                 Text(text = "TrippyChest")
             }
-        }
+        }*/
     }
 
     @Composable
