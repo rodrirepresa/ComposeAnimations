@@ -61,17 +61,15 @@ class MainActivity : ComponentActivity() {
             composable("roundIndicators") { RoundIndicators() }
             composable("adidasSplash") { SplashScreen {} }
             composable("trippyChest") { PhysicoChest() }
+            composable("adidasPageIndicator") { AdidasPageIndicator() }
         }
-
 
     }
 
     @Composable
     fun Buttons(navController: NavController) {
 
-        AdidasPageIndicator()
-
-        /*var modifier = Modifier.padding(0.dp, 20.dp)
+        var modifier = Modifier.padding(0.dp, 20.dp)
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -96,7 +94,13 @@ class MainActivity : ComponentActivity() {
             Button(onClick = { navController.navigate("trippyChest") }, modifier = modifier) {
                 Text(text = "TrippyChest")
             }
-        }*/
+            Button(
+                onClick = { navController.navigate("adidasPageIndicator") },
+                modifier = modifier
+            ) {
+                Text(text = "ConfirmedPageIndicator")
+            }
+        }
     }
 
     @Composable

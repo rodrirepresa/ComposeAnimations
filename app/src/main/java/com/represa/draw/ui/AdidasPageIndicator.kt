@@ -65,19 +65,6 @@ fun IndicatorsContainer(pagerState: PagerState) {
     }
 }
 
-@OptIn(ExperimentalPagerApi::class)
-private fun calculateWeight(pagerState: PagerState, position: Int): Float {
-    with(pagerState) {
-        targetPage?.let {
-            return when (position) {
-                currentPage -> (2f * (1 - currentPageOffset.notOvertaking(1f))).notLower(1f)
-                targetPage -> 1f + (1f * currentPageOffset.notOvertaking(1f))
-                else -> 1f
-            }
-        } ?: return if (position == currentPage) 2f else 1f
-    }
-}
-
 @Composable
 fun SimpleIndicator(
     modifier: Modifier,
@@ -100,6 +87,19 @@ fun SimpleIndicator(
                 size = Size(size.width, -height.toPx())
             )
         }
+    }
+}
+
+@OptIn(ExperimentalPagerApi::class)
+private fun calculateWeight(pagerState: PagerState, position: Int): Float {
+    with(pagerState) {
+        targetPage?.let {
+            return when (position) {
+                currentPage -> (2f * (1 - currentPageOffset.notOvertaking(1f))).notLower(1f)
+                targetPage -> 1f + (1f * currentPageOffset.notOvertaking(1f))
+                else -> 1f
+            }
+        } ?: return if (position == currentPage) 2f else 1f
     }
 }
 
@@ -184,6 +184,6 @@ object IndicatorValue {
     val minHeight = 1.dp
     val paddingContainer = 14.dp
     val heightContainer = 20.dp
-    var itemCount = 4
+    var itemCount = 9
     val paddingBetweenItems = 4.dp
 }
