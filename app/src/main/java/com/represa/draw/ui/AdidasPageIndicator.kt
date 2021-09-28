@@ -182,6 +182,6 @@ object IndicatorValue {
     val minHeight = 1.dp
     val paddingContainer = 14.dp
     val heightContainer = 20.dp
-    var itemCount = 7
+    var itemCount = 12
     val paddingBetweenItems = 4.dp
 }
