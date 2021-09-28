@@ -6,6 +6,7 @@ plugins {
 android {
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
+    testBuildType "staging"
 
     defaultConfig {
         applicationId "com.represa.draw"
@@ -22,6 +23,11 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+        staging {
+            initWith debug
+            manifestPlaceholders = [hostName:"com.represa.draw"]
+            //applicationIdSuffix ".debugStaging"
+        }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -37,6 +43,12 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion compose_version
         kotlinCompilerVersion '1.5.10'
+    }
+    android {
+        packagingOptions {
+            exclude 'META-INF/AL2.0'
+            exclude 'META-INF/LGPL2.1'
+        }
     }
 }
 
@@ -64,7 +76,8 @@ dependencies {
     // Integration with observables
     implementation "androidx.compose.runtime:runtime-livedata:$compose_version"
     // UI Tests
-    androidTestImplementation 'androidx.compose.ui:ui-test-junit4:1.0.0-beta01'
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:$compose_version")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:$compose_version")
 
     implementation "androidx.compose.ui:ui-tooling:1.0.0-beta01"
 
@@ -75,4 +88,5 @@ dependencies {
 
     //Navigation
     implementation "androidx.navigation:navigation-compose:2.4.0-alpha05"
+
 }

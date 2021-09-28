@@ -15,6 +15,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -96,7 +97,7 @@ class MainActivity : ComponentActivity() {
             }
             Button(
                 onClick = { navController.navigate("adidasPageIndicator") },
-                modifier = modifier
+                modifier = modifier.testTag("hola")
             ) {
                 Text(text = "ConfirmedPageIndicator")
             }

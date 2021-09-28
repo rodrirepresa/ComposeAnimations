@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -20,7 +21,8 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
-import kotlin.math.absoluteValue
+import com.represa.draw.extensions.notLower
+import com.represa.draw.extensions.notOvertaking
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
@@ -47,13 +49,20 @@ fun IndicatorsContainer(pagerState: PagerState) {
         ) {
             Row(
                 modifier = Modifier
-                    .fillMaxSize(),
+                    .fillMaxSize()
+                    .testTag("pageIndicatorContainer"),
                 verticalAlignment = Alignment.Bottom
             ) {
                 for (i in 0 until itemCount) {
-                    val weight = if (i == pagerState.currentPage) 1.4532f else 1f
                     SimpleIndicator(
-                        modifier = Modifier.weight(calculateWeight(pagerState = pagerState, position = i)),
+                        modifier = Modifier
+                            .weight(
+                                calculateWeight(
+                                    pagerState = pagerState,
+                                    position = i
+                                )
+                            )
+                            .testTag("indicator"),
                         color = color,
                         alpha = calculateAlpha(pagerState = pagerState, position = i),
                         height = calculateHeight(pagerState = pagerState, position = i),
@@ -138,24 +147,13 @@ private fun calculateHeight(
     }
 }
 
-fun Float.notOvertaking(maxValue: Float): Float {
-    return this.absoluteValue.takeIf { it < maxValue } ?: maxValue
-}
-
-fun Float.notLower(lowerValue: Float): Float {
-    return this.takeIf { it > lowerValue } ?: lowerValue
-}
-
-fun Dp.notLower(lowerValue: Dp): Dp {
-    return this.takeIf { it > lowerValue } ?: lowerValue
-}
-
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun Background(pagerState: PagerState) {
 
     HorizontalPager(
-        state = pagerState
+        state = pagerState,
+        modifier = Modifier.testTag("horizontalPager")
     ) { _ ->
         Box(
             modifier = Modifier
@@ -164,7 +162,7 @@ fun Background(pagerState: PagerState) {
             contentAlignment = Alignment.BottomCenter
         ) {
             Button(
-                onClick = {  },
+                onClick = { },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(10.dp),
@@ -184,6 +182,6 @@ object IndicatorValue {
     val minHeight = 1.dp
     val paddingContainer = 14.dp
     val heightContainer = 20.dp
-    var itemCount = 9
+    var itemCount = 7
     val paddingBetweenItems = 4.dp
 }
